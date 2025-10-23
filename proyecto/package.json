@@ -1,0 +1,52 @@
+{
+  "name": "my-electron-sqlite",
+  "version": "1.0.0",
+  "description": "Aplicación offline con Electron y SQLite",
+  "main": "electron/main.js",
+  "author": "",
+  "license": "ISC",
+  "scripts": {
+    "dev": "cross-env ELECTRON_DEV=true electron .",
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.miempresa.myapp",
+    "productName": "MyElectronSQLite",
+    "files": [
+      "public/**",
+      "electron/**",
+      "package.json"
+    ],
+    "asar": true,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    }
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
+    "electron-rebuild": "^3.2.9"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1"
+  }
+}
