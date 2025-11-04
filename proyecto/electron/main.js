@@ -12,8 +12,8 @@ function createWindow() {
       nodeIntegration: false,
     },
   });
+win.loadFile(path.join(__dirname, '../react-app/dist/index.html'));
 
-  win.loadFile(path.join(__dirname, '../public/index.html'));
 }
 
 app.whenReady().then(() => {
