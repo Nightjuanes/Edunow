@@ -1,144 +1,113 @@
-import React, { useEffect, useRef, useState, type JSX } from "react";
+// proyecto/react-app/src/tabs/ProfeNow.tsx
+import React, { useEffect, useRef, useState } from "react";
 import "./styles.css";
 
-/**
- * EDUNOW — Profe NOWI (React + CSS puro)
- * Vista offline SIN conexión real (mock streaming).
- */
-
-type Role = "user" | "assistant";
+type Role = "user" | "assistant" | "system";
 interface ChatMessage { role: Role; content: string; }
 
-const USE_MOCK = true;
+const DIRECT_OLLAMA_URL = "http://localhost:11434/api/chat"; // fallback navegador
+const MODEL = "llama3.1:8b";
 
-function Avatar({ me }: { me: boolean }) {
-  return <div className="avatar">{me ? "🙂" : "👨‍🏫"}</div>;
-}
-
-function Message({ m }: { m: ChatMessage }) {
-  const me = m.role === "user";
-  return (
-    <div className={`msg ${me ? "me" : ""}`}>
-      <Avatar me={me} />
-      <div className="bubble">{m.content}</div>
-    </div>
-  );
-}
-
-async function mockStreamResponse(prompt: string, onChunk: (delta: string) => void) {
-  const simulated =
-    "Esta es una respuesta simulada del modelo IA local 🤖.\n" +
-    "Puedes seguir diseñando la interfaz sin depender de la conexión.\n\n" +
-    "• Tip: cuando tengas el backend, sustituye este mock por un fetch.\n" +
-    "• Tip: mantén el historial en `messages` como ya está en esta vista.";
-  const parts = simulated.split(/(\s+)/);
-  for (const part of parts) {
-    await new Promise((r) => setTimeout(r, 25));
-    onChunk(part);
-  }
-}
-
-export default function EduNowChat(): JSX.Element {
+export default function ProfeNow() {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: "assistant", content: "¡Hola! Soy Profe NOWI. ¿En qué puedo ayudarte hoy?" },
+    { role: "assistant", content: "¡Hola! Soy Profe NOWI. ¿En qué puedo ayudarte hoy?" }
   ]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState("Listo");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
-  async function sendMessage(e?: React.FormEvent) {
+  async function send(e?: React.FormEvent) {
     e?.preventDefault();
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || loading) return;
 
     setInput("");
-
     const userMsg: ChatMessage = { role: "user", content: text };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
 
-    const asstMsg: ChatMessage = { role: "assistant", content: "" };
-    setMessages((prev) => [...prev, asstMsg]);
-
-    setIsLoading(true);
+    // placeholder assistant
+    setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+    setLoading(true);
     setStatus("Pensando…");
 
+    const history = [...messages, userMsg];
+
+    const isElectron = typeof window !== "undefined" && !!window.edunow;
+
     try {
-      if (USE_MOCK) {
-        await mockStreamResponse(text, (delta) => {
-          setMessages((prev) => {
+      if (isElectron) {
+        // === Vía IPC con Electron ===
+        const stream = window.edunow!.chatStream(history);
+        const detach = stream.onChunk((delta) => {
+          setMessages(prev => {
             const copy = [...prev];
             const last = copy[copy.length - 1];
             if (last?.role === "assistant") last.content += delta;
             return copy;
           });
         });
+        stream.onDone((payload) => {
+          detach();
+          setStatus(payload.error ? `Error: ${payload.error}` : "Listo");
+          setLoading(false);
+        });
       } else {
-        // Aquí irá tu fetch real cuando conectes el backend/LLM local.
+        // === Fallback directo a Ollama (navegador) ===
+        const res = await fetch(DIRECT_OLLAMA_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ model: MODEL, messages: history, stream: true }),
+        });
+        if (!res.ok || !res.body) throw new Error(await res.text());
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx;
+          while ((idx = buffer.indexOf("\n")) !== -1) {
+            const line = buffer.slice(0, idx).trim();
+            buffer = buffer.slice(idx + 1);
+            if (!line) continue;
+            try {
+              const json = JSON.parse(line);
+              const delta = json?.message?.content || "";
+              if (delta) {
+                setMessages(prev => {
+                  const copy = [...prev];
+                  const last = copy[copy.length - 1];
+                  if (last?.role === "assistant") last.content += delta;
+                  return copy;
+                });
+              }
+            } catch {}
+          }
+        }
+        setStatus("Listo");
+        setLoading(false);
       }
-      setStatus("Listo");
     } catch (err: any) {
-      console.error(err);
-      setMessages((prev) => {
+      setMessages(prev => {
         const copy = [...prev];
         const last = copy[copy.length - 1];
         if (last?.role === "assistant") last.content = `⚠️ Error: ${err?.message ?? "desconocido"}`;
         return copy;
       });
       setStatus("Error");
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }
-
-  function loadDemo() {
-    setMessages([
-      { role: "user", content: "Hola, dame más información sobre como funciona Arduino" },
-      {
-        role: "assistant",
-        content:
-          "Arduino es una plataforma de hardware y software libre para crear prototipos electrónicos.\n" +
-          "• Placa (hardware) con microcontrolador.\n" +
-          "• IDE para programar y cargar el código.",
-      },
-      { role: "user", content: "¡Gracias!" },
-    ]);
   }
 
   return (
     <div className="app-grid">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="logo">
-          <div className="logo-badge">EN</div>
-          <div>
-            <div className="logo-title">EDUNOW</div>
-            <div className="logo-sub">Profe NOWI</div>
-          </div>
-        </div>
+      {/* ... tu sidebar igual ... */}
 
-        <nav className="nav">
-          <a href="#" className="nav-link">Home</a>
-          <a href="#" className="nav-link active">Profe NOWI</a>
-          <a href="#" className="nav-link">Cursos</a>
-          <a href="#" className="nav-link">Progreso</a>
-        </nav>
-
-        <div className="section-title">Conversaciones</div>
-        <div className="threads">
-          <button onClick={loadDemo} className="thread">
-            <div>
-              <div className="title">Arduino</div>
-              <div className="snippet">Hola, dame más informa…</div>
-            </div>
-            <div className="time">10 min</div>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main */}
       <main className="main">
         <header className="header">
           <div className="tab">Profe NOWI</div>
@@ -146,20 +115,25 @@ export default function EduNowChat(): JSX.Element {
         </header>
 
         <section className="chat">
-          {messages.map((m, i) => <Message key={i} m={m} />)}
+          {messages.map((m, i) => (
+            <div key={i} className={`msg ${m.role === "user" ? "me" : ""}`}>
+              <div className="avatar">{m.role === "user" ? "🙂" : "👨‍🏫"}</div>
+              <div className={`bubble ${m.role === "user" ? "me" : ""}`}>{m.content}</div>
+            </div>
+          ))}
           <div ref={endRef} />
         </section>
 
         <footer className="composer">
-          <form onSubmit={sendMessage} className="composer-form">
+          <form onSubmit={send} className="composer-form">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Escribe tu mensaje…"
               className="input"
             />
-            <button type="submit" disabled={isLoading} className="btn">
-              {isLoading ? "Enviando…" : "Enviar"}
+            <button type="submit" disabled={loading} className="btn">
+              {loading ? "Enviando…" : "Enviar"}
             </button>
           </form>
           <div className="status pill">{status}</div>
