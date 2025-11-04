@@ -8,7 +8,10 @@
   "scripts": {
     "dev": "cross-env ELECTRON_DEV=true electron .",
     "start": "electron .",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "dev:react": "cd react-app && npm run dev",
+    "dev:electron": "cd electron && electron ."
+    
   },
   "build": {
     "appId": "com.miempresa.myapp",
