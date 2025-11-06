@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import Home from './(tabs)/Home';
-import ProfeNow from './(tabs)/ProfeNow';
-import Cursos from './(tabs)/Cursos';
-import Progreso from './(tabs)/progreso';
+import Home from './(tabs)/Home/Home';
+import ProfeNow from './(tabs)/ProfeNow/ProfeNow';
+import Cursos from './(tabs)/Cursos/Cursos';
+import Progreso from './(tabs)/Progreso/progreso';
 
 
 import { Link } from 'react-router-dom';
