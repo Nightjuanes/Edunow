@@ -1,10 +1,16 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import { StrictMode, useState } from "react";
+import { createRoot } from "react-dom/client";
+import Start from "./Start/Start";
+import App from "./App";
 
-import App from './App.tsx'
+function Root() {
+  const [started, setStarted] = useState(false);
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+  return (
+    <StrictMode>
+      {!started ? <Start onPlay={() => setStarted(true)} /> : <App />}
+    </StrictMode>
+  );
+}
+
+createRoot(document.getElementById("root")!).render(<Root />);

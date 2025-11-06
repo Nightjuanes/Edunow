@@ -4,6 +4,7 @@ import Home from './(tabs)/Home/Home';
 import ProfeNow from './(tabs)/ProfeNow/ProfeNow';
 import Cursos from './(tabs)/Cursos/Cursos';
 import Progreso from './(tabs)/Progreso/progreso';
+import Start from './Start/Start';
 
 
 import { Link } from 'react-router-dom';
@@ -15,7 +16,7 @@ function App() {
       <div>
         {/* Aquí puedes poner tu menú de navegación */}
         <nav>
-          <Link to="/">Home</Link>
+          <Link to="/home">Home</Link>
           <Link to="/profe-now">Profe Now</Link>
           <Link to="/cursos">Cursos</Link>
           <Link to="/progreso">Progreso</Link>
@@ -23,10 +24,12 @@ function App() {
 
         {/* Aquí defines las rutas */}
         <Routes>
-          <Route path="/" element={<Home />} />
+          
+          <Route path="/home" element={<Home />} />
           <Route path="/profe-now" element={<ProfeNow />} />
           <Route path="/cursos" element={<Cursos />} />
           <Route path="/progreso" element={<Progreso />} />
+          
         </Routes>
       </div>
     </Router>
