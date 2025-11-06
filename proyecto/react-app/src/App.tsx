@@ -1,37 +1,28 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-import Home from './(tabs)/Home/Home';
-import ProfeNow from './(tabs)/ProfeNow/ProfeNow';
-import Cursos from './(tabs)/Cursos/Cursos';
-import Progreso from './(tabs)/Progreso/progreso';
-import Start from './Start/Start';
-
-
-import { Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout/Layout";
+import Home from "./(tabs)/Home/Home";
+import ProfeNow from "./(tabs)/ProfeNow/ProfeNow";
+import Cursos from "./(tabs)/Cursos/Cursos";
+import Progreso from "./(tabs)/Progreso/progreso";
+import Start from "./Start/Start";
 
 
+ 
 function App() {
   return (
     <Router>
-      <div>
-        {/* Aquí puedes poner tu menú de navegación */}
-        <nav>
-          <Link to="/home">Home</Link>
-          <Link to="/profe-now">Profe Now</Link>
-          <Link to="/cursos">Cursos</Link>
-          <Link to="/progreso">Progreso</Link>
-        </nav>
+      <Routes>
+        {/* Pantalla de inicio fuera del layout */}
+        <Route path="/start" element={<Start />} />
 
-        {/* Aquí defines las rutas */}
-        <Routes>
-          
+        {/* Todo lo que va dentro del layout */}
+        <Route element={<Layout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/profe-now" element={<ProfeNow />} />
           <Route path="/cursos" element={<Cursos />} />
           <Route path="/progreso" element={<Progreso />} />
-          
-        </Routes>
-      </div>
+        </Route>
+      </Routes>
     </Router>
   );
 }

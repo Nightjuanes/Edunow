@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Holtwood+One+SC&display=swap');
 .start-container {
   background-image: url('C:\NATALIA\7\CAPSTONE DP\Edunow\proyecto\react-app\src\assets\img\start.png'); /* Usa tu imagen aquí */
   background-size: cover;
@@ -8,7 +9,7 @@
   justify-content: center;
   align-items: center;
   position: relative;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Holtwood One SC', serif;
   font-weight: bold;
 }
 
@@ -17,7 +18,7 @@
 }
 
 .title {
-  font-size: 150px;
+  font-size: 120px;
   color: white;
   text-shadow: 3px 3px 10px rgba(0,0,0,0.5);
   font-weight: 900;

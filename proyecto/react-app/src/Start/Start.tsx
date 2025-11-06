@@ -1,15 +1,14 @@
+import { useNavigate } from "react-router-dom";
 import "./Start.css";
 
-interface StartProps {
-  onPlay: () => void;
-}
+function Start() {
+  const navigate = useNavigate();
 
-function Start({ onPlay }: StartProps) {
   return (
     <div className="start-container">
       <div className="overlay">
         <h1 className="title">EDUNOW</h1>
-        <button className="play-button" onClick={onPlay}>
+        <button className="play-button" onClick={() => navigate("/home")}>
           PLAY
         </button>
       </div>
