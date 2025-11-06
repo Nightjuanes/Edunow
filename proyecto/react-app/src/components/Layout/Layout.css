@@ -5,6 +5,8 @@
   height: 100vh;
   background-color: #f5f6fa;
   font-family: 'Holtwood One SC', serif;
+  font-style: normal;
+  font-weight: 400;
 }
 
 .sidebar {
