@@ -5,6 +5,7 @@ import ProfeNow from "./(tabs)/ProfeNow/ProfeNow";
 import Cursos from "./(tabs)/Cursos/Cursos";
 import Progreso from "./(tabs)/Progreso/progreso";
 import Start from "./Start/Start";
+import ContenidoCurso from "./(tabs)/Cursos/contenido/ContenidoCursos";
 
 
  
@@ -21,6 +22,7 @@ function App() {
           <Route path="/profe-now" element={<ProfeNow />} />
           <Route path="/cursos" element={<Cursos />} />
           <Route path="/progreso" element={<Progreso />} />
+          <Route path="/contenido_curso" element={<ContenidoCurso />} />
         </Route>
       </Routes>
     </Router>
