@@ -22,7 +22,7 @@ function App() {
           <Route path="/profe-now" element={<ProfeNow />} />
           <Route path="/cursos" element={<Cursos />} />
           <Route path="/progreso" element={<Progreso />} />
-          <Route path="/contenido_curso" element={<ContenidoCurso />} />
+          <Route path="/contenido_curso/:id" element={<ContenidoCurso />} />
         </Route>
       </Routes>
     </Router>

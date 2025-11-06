@@ -1,6 +1,8 @@
 import { useState } from "react";
 import "./cursos.css";
 import { Link } from "react-router-dom";
+import energias from "./energias.jpg";
+import logoenergias from "./logoenergia.png";
 
 function Cursos() {
   const cursos = [
@@ -10,9 +12,9 @@ function Cursos() {
       descripcion:
         "Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.",
       duracion: "24 horas",
-      imagen: "https://cdn-icons-png.flaticon.com/512/2503/2503508.png",
+      imagen: logoenergias,
       banner:
-        "https://img.freepik.com/foto-gratis/parque-eolico-paisaje-panal-solar_1150-11120.jpg",
+        energias,
     },
     {
       id: 2,
@@ -64,10 +66,10 @@ function Cursos() {
           {cursoSeleccionado.descripcion}
         </p>
         <div className="botones">
-        <Link to= "/contenido_curso">
+          {/* 🔗 Redirección dinámica con el ID */}
+          <Link to={`/contenido_curso/${cursoSeleccionado.id}`}>
             <button className="btn">INICIAR</button>
-        </Link>
-          
+          </Link>
         </div>
       </div>
     </div>
