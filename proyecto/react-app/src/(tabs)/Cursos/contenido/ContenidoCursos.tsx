@@ -9,18 +9,19 @@ function ContenidoCursos() {
       id: 1,
       titulo: "Energías Renovables",
       etapas: [
-        { id: 1, titulo: "Etapa 1: Energía Solar", icono: "☀️" },
-        { id: 2, titulo: "Etapa 2: Energía Eólica", icono: "🌬️" },
-        { id: 3, titulo: "Etapa 3: Energía Hidroeléctrica", icono: "💧" },
+        { id: 1, titulo: "Energía Solar", icono: "☀️" },
+        { id: 2, titulo: "Energía Eólica", icono: "🌬️" },
+        { id: 3, titulo: "Energía Hidroeléctrica", icono: "💧" },
+        { id: 4, titulo: "Energía Eólica", icono: "🌬️" },
       ],
     },
     {
       id: 2,
       titulo: "Pseudo-código",
       etapas: [
-        { id: 1, titulo: "Etapa 1: Estructuras Básicas", icono: "📘" },
-        { id: 2, titulo: "Etapa 2: Condicionales", icono: "⚙️" },
-        { id: 3, titulo: "Etapa 3: Ciclos y Bucles", icono: "🔁" },
+        { id: 1, titulo: "Estructuras Básicas", icono: "📘" },
+        { id: 2, titulo: "Condicionales", icono: "⚙️" },
+        { id: 3, titulo: "Ciclos y Bucles", icono: "🔁" },
       ],
     },
   ];
@@ -33,21 +34,18 @@ function ContenidoCursos() {
     <div className="contenido-container">
       {cursoSeleccionado ? (
         <>
-        <Link to="/cursos">
-        <button className="boton-mis-cursos"> Mis cursos</button>
-        </Link>
+          <Link to="/cursos">
+            <button className="boton-mis-cursos">Mis cursos</button>
+          </Link>
           <h1 className="titulo-curso">
-            Curso de {cursoSeleccionado.titulo}
+            {cursoSeleccionado.titulo}
           </h1>
 
           <div className="mapa-progreso">
-            {cursoSeleccionado.etapas.map((etapa, index) => (
+            {cursoSeleccionado.etapas.map((etapa) => (
               <div key={etapa.id} className="etapa">
                 <div className="icono">{etapa.icono}</div>
                 <p className="etapa-titulo">{etapa.titulo}</p>
-                {index < cursoSeleccionado.etapas.length - 1 && (
-                  <div className="linea"></div>
-                )}
               </div>
             ))}
           </div>
