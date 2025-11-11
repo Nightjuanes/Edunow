@@ -106,6 +106,21 @@ export default function ProfeNow() {
     } catch (err: any) {
       setStatus("Error");
       setLoading(false);
+      // Mostrar mensaje de error en el chat
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === activeChat
+            ? {
+                ...chat,
+                messages: chat.messages.map((m, i) =>
+                  i === chat.messages.length - 1 && m.role === "assistant"
+                    ? { ...m, content: "Error: No se pudo conectar con el servidor de IA. Asegúrate de que Ollama esté instalado y ejecutándose." }
+                    : m
+                ),
+              }
+            : chat
+        )
+      );
     }
   }
 
