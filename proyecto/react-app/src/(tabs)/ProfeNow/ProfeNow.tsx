@@ -12,8 +12,7 @@ interface Chat {
   messages: ChatMessage[];
 }
 
-const DIRECT_OLLAMA_URL = "http://localhost:11434/api/chat";
-const MODEL = "llama3.1:8b";
+// Using IPC through Electron preload
 
 export default function ProfeNow() {
   const [chats, setChats] = useState<Chat[]>([
@@ -34,33 +33,6 @@ export default function ProfeNow() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Función para obtener respuesta simulada
-  function getMockResponse(userInput: string): string {
-    const responses: { [key: string]: string } = {
-      hola: "¡Hola! ¿Cómo estás? Soy Profe NOWI, tu asistente educativo.",
-      "hola!": "¡Hola! ¿Cómo estás? Soy Profe NOWI, tu asistente educativo.",
-      "buenos dias": "¡Buenos días! ¿Listo para aprender algo nuevo hoy?",
-      "buenas tardes": "¡Buenas tardes! ¿En qué puedo ayudarte?",
-      "buenas noches": "¡Buenas noches! ¿Necesitas ayuda con algo antes de dormir?",
-      "como estas": "¡Estoy bien, gracias! ¿Y tú? ¿Qué quieres aprender hoy?",
-      "que puedes hacer": "Puedo ayudarte con preguntas sobre educación, matemáticas, ciencias, historia y más. ¿Qué tema te interesa?",
-      "ayuda": "Claro, dime en qué necesitas ayuda. Puedo explicarte conceptos, resolver problemas o darte consejos de estudio.",
-      "gracias": "¡De nada! Me alegra poder ayudarte. ¿Algo más?",
-      "adios": "¡Hasta luego! Que tengas un buen día.",
-      "chao": "¡Chao! Nos vemos pronto.",
-    };
-
-    const lowerInput = userInput.toLowerCase();
-    for (const key in responses) {
-      if (lowerInput.includes(key)) {
-        return responses[key];
-      }
-    }
-
-    // Respuesta por defecto
-    return "Lo siento, no entendí tu mensaje. ¿Puedes reformularlo? Soy un asistente educativo enfocado en ayudar con temas de aprendizaje.";
-  }
 
   async function send(e?: React.FormEvent) {
     e?.preventDefault();
@@ -83,75 +55,70 @@ export default function ProfeNow() {
     setLoading(true);
     setStatus("Pensando…");
 
-    try {
-      const history = [...messages, userMsg];
-      const res = await fetch(DIRECT_OLLAMA_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ model: MODEL, messages: history, stream: true }),
-      });
-      if (!res.ok || !res.body) throw new Error(await res.text());
+    const history = [...messages, userMsg];
+    const chatId = Date.now().toString();
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        let idx;
-        while ((idx = buffer.indexOf("\n")) !== -1) {
-          const line = buffer.slice(0, idx).trim();
-          buffer = buffer.slice(idx + 1);
-          if (!line) continue;
-          try {
-            const json = JSON.parse(line);
-            const delta = json?.message?.content || "";
-            if (delta) {
-        setChats((prev) =>
-          prev.map((chat) =>
-            chat.id === activeChat
-              ? {
-                  ...chat,
-                  messages: chat.messages.map((m, i) =>
-                    i === chat.messages.length - 1 && m.role === "assistant"
-                      ? { ...m, content: m.content + delta }
-                      : m
-                  ),
-                }
-              : chat
-          )
-        );
-            }
-          } catch {}
-        }
-      }
-
-      setStatus("Listo");
-        setLoading(false);
-    } catch (err: any) {
-      // Si falla Ollama, usar respuesta simulada
-      setTimeout(() => {
-        const mockResponse = getMockResponse(text);
-        setChats((prev) =>
-          prev.map((chat) =>
-            chat.id === activeChat
-              ? {
-                  ...chat,
-                  messages: chat.messages.map((m, i) =>
-                    i === chat.messages.length - 1 && m.role === "assistant"
-                      ? { ...m, content: mockResponse }
-                      : m
-                  ),
-                }
-              : chat
-          )
-        );
-        setStatus("Listo");
-        setLoading(false);
-      }, 1000); // Simular delay de respuesta
+    if (!window.edunow) {
+      setStatus("Error");
+      setLoading(false);
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === activeChat
+            ? {
+                ...chat,
+                messages: chat.messages.map((m, i) =>
+                  i === chat.messages.length - 1 && m.role === "assistant"
+                    ? { ...m, content: "Error: IPC no disponible. Asegúrate de que la app esté ejecutándose en Electron." }
+                    : m
+                ),
+              }
+            : chat
+        )
+      );
+      return;
     }
+
+    const stream = window.edunow.chatStream(history, chatId);
+
+    stream.onChunk((delta: string) => {
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === activeChat
+            ? {
+                ...chat,
+                messages: chat.messages.map((m, i) =>
+                  i === chat.messages.length - 1 && m.role === "assistant"
+                    ? { ...m, content: m.content + delta }
+                    : m
+                ),
+              }
+            : chat
+        )
+      );
+    });
+
+    stream.onDone((payload: any) => {
+      setLoading(false);
+      if (payload.error) {
+        setStatus("Error");
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === activeChat
+              ? {
+                  ...chat,
+                  messages: chat.messages.map((m, i) =>
+                    i === chat.messages.length - 1 && m.role === "assistant"
+                      ? { ...m, content: "Error: " + payload.error }
+                      : m
+                  ),
+                }
+              : chat
+          )
+        );
+      } else {
+        setStatus("Listo");
+      }
+    });
   }
 
   function createNewChat() {

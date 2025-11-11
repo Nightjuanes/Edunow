@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const MODEL = process.env.MODEL || 'gemma:2b';
+const MODEL = process.env.MODEL || 'llama3.1:8b';
 
 // Si tu versión de Electron/Node no trae fetch global, instala node-fetch y usa:
 // const fetch = require('node-fetch');
