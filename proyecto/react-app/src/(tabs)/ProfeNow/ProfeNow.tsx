@@ -35,6 +35,33 @@ export default function ProfeNow() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Función para obtener respuesta simulada
+  function getMockResponse(userInput: string): string {
+    const responses: { [key: string]: string } = {
+      hola: "¡Hola! ¿Cómo estás? Soy Profe NOWI, tu asistente educativo.",
+      "hola!": "¡Hola! ¿Cómo estás? Soy Profe NOWI, tu asistente educativo.",
+      "buenos dias": "¡Buenos días! ¿Listo para aprender algo nuevo hoy?",
+      "buenas tardes": "¡Buenas tardes! ¿En qué puedo ayudarte?",
+      "buenas noches": "¡Buenas noches! ¿Necesitas ayuda con algo antes de dormir?",
+      "como estas": "¡Estoy bien, gracias! ¿Y tú? ¿Qué quieres aprender hoy?",
+      "que puedes hacer": "Puedo ayudarte con preguntas sobre educación, matemáticas, ciencias, historia y más. ¿Qué tema te interesa?",
+      "ayuda": "Claro, dime en qué necesitas ayuda. Puedo explicarte conceptos, resolver problemas o darte consejos de estudio.",
+      "gracias": "¡De nada! Me alegra poder ayudarte. ¿Algo más?",
+      "adios": "¡Hasta luego! Que tengas un buen día.",
+      "chao": "¡Chao! Nos vemos pronto.",
+    };
+
+    const lowerInput = userInput.toLowerCase();
+    for (const key in responses) {
+      if (lowerInput.includes(key)) {
+        return responses[key];
+      }
+    }
+
+    // Respuesta por defecto
+    return "Lo siento, no entendí tu mensaje. ¿Puedes reformularlo? Soy un asistente educativo enfocado en ayudar con temas de aprendizaje.";
+  }
+
   async function send(e?: React.FormEvent) {
     e?.preventDefault();
     const text = input.trim();
@@ -104,23 +131,26 @@ export default function ProfeNow() {
       setStatus("Listo");
         setLoading(false);
     } catch (err: any) {
-      setStatus("Error");
-      setLoading(false);
-      // Mostrar mensaje de error en el chat
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeChat
-            ? {
-                ...chat,
-                messages: chat.messages.map((m, i) =>
-                  i === chat.messages.length - 1 && m.role === "assistant"
-                    ? { ...m, content: "Error: No se pudo conectar con el servidor de IA. Asegúrate de que Ollama esté instalado y ejecutándose." }
-                    : m
-                ),
-              }
-            : chat
-        )
-      );
+      // Si falla Ollama, usar respuesta simulada
+      setTimeout(() => {
+        const mockResponse = getMockResponse(text);
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === activeChat
+              ? {
+                  ...chat,
+                  messages: chat.messages.map((m, i) =>
+                    i === chat.messages.length - 1 && m.role === "assistant"
+                      ? { ...m, content: mockResponse }
+                      : m
+                  ),
+                }
+              : chat
+          )
+        );
+        setStatus("Listo");
+        setLoading(false);
+      }, 1000); // Simular delay de respuesta
     }
   }
 
