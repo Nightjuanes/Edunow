@@ -24,7 +24,7 @@ function createWindow() {
   // DEV: carga tu React dev server
   // win.loadURL('http://localhost:5173');
   // PROD: carga el index.html generado
-  // win.loadFile(path.join(__dirname, '../dist/index.html'));
+  win.loadFile(path.join(__dirname, '../react-app/dist/index.html'));
 
   // Ajusta esta línea según tu flujo. Si usas Vite en react-app:
   win.loadURL('http://localhost:5173');

@@ -82,27 +82,27 @@ export default function ProfeNow() {
             const json = JSON.parse(line);
             const delta = json?.message?.content || "";
             if (delta) {
-              setChats((prev) =>
-                prev.map((chat) =>
-                  chat.id === activeChat
-                    ? {
-                        ...chat,
-                        messages: chat.messages.map((m, i) =>
-                          i === chat.messages.length - 1 && m.role === "assistant"
-                            ? { ...m, content: m.content + delta }
-                            : m
-                        ),
-                      }
-                    : chat
-                )
-              );
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === activeChat
+              ? {
+                  ...chat,
+                  messages: chat.messages.map((m, i) =>
+                    i === chat.messages.length - 1 && m.role === "assistant"
+                      ? { ...m, content: m.content + delta }
+                      : m
+                  ),
+                }
+              : chat
+          )
+        );
             }
           } catch {}
         }
       }
 
       setStatus("Listo");
-      setLoading(false);
+        setLoading(false);
     } catch (err: any) {
       setStatus("Error");
       setLoading(false);

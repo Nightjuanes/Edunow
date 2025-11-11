@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout/Layout";
 import Home from "./(tabs)/Home/Home";
 import ProfeNow from "./(tabs)/ProfeNow/ProfeNow";
@@ -13,6 +13,7 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Navigate to="/start" replace />} />
         {/* Pantalla de inicio fuera del layout */}
         <Route path="/start" element={<Start />} />
 
