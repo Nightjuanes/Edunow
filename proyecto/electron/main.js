@@ -1,6 +1,8 @@
 // proyecto/electron/main.js
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const {getDB} = require('./db')
+
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const MODEL = process.env.MODEL || 'gemma:2b';
@@ -13,6 +15,7 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -21,18 +24,28 @@ function createWindow() {
     },
   });
 
-  // DEV: carga tu React dev server
-  // win.loadURL('http://localhost:5173');
-  // PROD: carga el index.html generado
-  // win.loadFile(path.join(__dirname, '../dist/index.html'));
-
-  // Ajusta esta línea según tu flujo. Si usas Vite en react-app:
+  win.loadFile(path.join(__dirname, '../react-app/dist/index.html'));
   win.loadURL('http://localhost:5173');
+
+  
 }
 
 app.whenReady().then(createWindow);
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+
+app.whenReady().then(()=>{
+  const db = getDB();
+  createWindow
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
 
 // --- IPC streaming a Ollama ---
 const activeControllers = new Map();
