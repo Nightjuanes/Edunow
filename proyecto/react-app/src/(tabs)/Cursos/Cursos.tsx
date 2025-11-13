@@ -1,35 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./cursos.css";
 import { Link } from "react-router-dom";
 import energias from "./energias.jpg";
 import logoenergias from "./logoenergia.png";
 
-function Cursos() {
-  const cursos = [
-    {
-      id: 1,
-      titulo: "Energías Renovables",
-      descripcion:
-        "Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.",
-      duracion: "24 horas",
-      imagen: logoenergias,
-      banner:
-        energias,
-    },
-    {
-      id: 2,
-      titulo: "Pseudo-código",
-      descripcion:
-        "Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.",
-      duracion: "15 horas",
-      imagen: "https://cdn-icons-png.flaticon.com/512/2103/2103626.png",
-      banner:
-        "https://img.freepik.com/vector-gratis/fondo-codigo-binario_53876-116181.jpg",
-    },
-  ];
+interface Course {
+  id_curso: number;
+  titulo: string;
+  descripcion: string;
+  imagen_curso: string;
+  nivel_dificultad: string;
+  imagen?: string;
+  banner?: string;
+  duracion?: string;
+  id?: number;
+}
 
-  // Estado para el curso seleccionado
-  const [cursoSeleccionado, setCursoSeleccionado] = useState(cursos[0]);
+function Cursos() {
+  const [cursos, setCursos] = useState<Course[]>([]);
+  const [cursoSeleccionado, setCursoSeleccionado] = useState<Course | null>(null);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        if (window.edunow?.db) {
+          const courses = await window.edunow.db.getCourses();
+          // Map to add local images if needed
+          const mappedCourses = courses.map(course => ({
+            ...course,
+            id: course.id_curso,
+            imagen: course.titulo === "Energías Renovables" ? logoenergias : "https://cdn-icons-png.flaticon.com/512/2103/2103626.png",
+            banner: course.titulo === "Energías Renovables" ? energias : "https://img.freepik.com/vector-gratis/fondo-codigo-binario_53876-116181.jpg",
+            duracion: course.titulo === "Energías Renovables" ? "24 horas" : "15 horas"
+          }));
+          setCursos(mappedCourses);
+          if (mappedCourses.length > 0) setCursoSeleccionado(mappedCourses[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    }
+    fetchCourses();
+  }, []);
+
+  if (!cursoSeleccionado) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="cursos-container">
