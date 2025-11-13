@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import "./cursos.css";
 import { Link } from "react-router-dom";
-import energias from "./energias.jpg";
-import logoenergias from "./logoenergia.png";
+
 
 interface Course {
-  id_curso: number;
+  id: number;
   titulo: string;
   descripcion: string;
-  imagen_curso: string;
-  nivel_dificultad: string;
-  imagen?: string;
-  banner?: string;
-  duracion?: string;
-  id?: number;
+  imagen: string;
+  banner: string;
+  duracion: string;
+  nivel: string;
 }
 
 function Cursos() {
@@ -27,11 +24,13 @@ function Cursos() {
           const courses = await window.edunow.db.getCourses();
           // Map to add local images if needed
           const mappedCourses = courses.map(course => ({
-            ...course,
             id: course.id_curso,
-            imagen: course.titulo === "Energías Renovables" ? logoenergias : "https://cdn-icons-png.flaticon.com/512/2103/2103626.png",
-            banner: course.titulo === "Energías Renovables" ? energias : "https://img.freepik.com/vector-gratis/fondo-codigo-binario_53876-116181.jpg",
-            duracion: course.titulo === "Energías Renovables" ? "24 horas" : "15 horas"
+            titulo: course.titulo,
+            descripcion: course.descripcion,
+            imagen: course.imagen_curso,
+            banner: course.banner,
+            duracion: course.duracion,
+            nivel: course.nivel_dificultad
           }));
           setCursos(mappedCourses);
           if (mappedCourses.length > 0) setCursoSeleccionado(mappedCourses[0]);

@@ -32,7 +32,9 @@ function initSchema(db) {
       titulo TEXT NOT NULL,
       descripcion TEXT,
       imagen_curso TEXT,
-      nivel_dificultad TEXT
+      banner TEXT,
+      nivel_dificultad TEXT,
+      duracion TEXT
     );
 
     CREATE TABLE IF NOT EXISTS Modulo (
@@ -150,14 +152,14 @@ function seedData() {
   if (courses.count === 0) {
     // Insert sample courses
     db.prepare(`
-      INSERT INTO Curso (titulo, descripcion, imagen_curso, nivel_dificultad)
-      VALUES (?, ?, ?, ?)
-    `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', 'logoenergia.png', 'Intermedio');
+      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio', '24 horas');
 
     db.prepare(`
-      INSERT INTO Curso (titulo, descripcion, imagen_curso, nivel_dificultad)
-      VALUES (?, ?, ?, ?)
-    `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', 'https://cdn-icons-png.flaticon.com/512/2103/2103626.png', 'Principiante');
+      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', '/images/icono_pseudocodigo.png', '/images/pseudo_banner.jpg', 'Principiante', '12 horas');
 
     // Insert modules, lessons, exercises for course 1
     db.prepare(`
