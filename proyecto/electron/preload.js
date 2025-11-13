@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('edunow', {
   },
   db: {
     getStudents: () => ipcRenderer.invoke('db:getStudents'),
+    getStudent: (studentId) => ipcRenderer.invoke('db:getStudent', studentId),
     getCourses: () => ipcRenderer.invoke('db:getCourses'),
     getModules: (courseId) => ipcRenderer.invoke('db:getModules', courseId),
     getLessons: (moduleId) => ipcRenderer.invoke('db:getLessons', moduleId),

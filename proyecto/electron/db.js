@@ -19,7 +19,7 @@ function initSchema(db) {
       nombre_usuario TEXT NOT NULL,
       correo TEXT UNIQUE NOT NULL,
       contrasena TEXT NOT NULL,
-      vidas INTEGER DEFAULT 3,
+      vidas INTEGER DEFAULT 4,
       racha_actual INTEGER DEFAULT 0,
       racha_maxima INTEGER DEFAULT 0,
       fecha_ultima_actividad TEXT,
@@ -33,8 +33,7 @@ function initSchema(db) {
       descripcion TEXT,
       imagen_curso TEXT,
       banner TEXT,
-      nivel_dificultad TEXT,
-      duracion TEXT
+      nivel_dificultad TEXT
     );
 
     CREATE TABLE IF NOT EXISTS Modulo (
@@ -101,6 +100,11 @@ function getStudents() {
   return db.prepare('SELECT * FROM Estudiante').all();
 }
 
+function getStudent(studentId) {
+  const db = getDB();
+  return db.prepare('SELECT * FROM Estudiante WHERE id_estudiante = ?').get(studentId);
+}
+
 function getCourses() {
   const db = getDB();
   return db.prepare('SELECT * FROM Curso').all();
@@ -132,7 +136,7 @@ function addStudent(data) {
     INSERT INTO Estudiante (nombre_usuario, correo, contrasena, vidas, racha_actual, racha_maxima, fecha_ultima_actividad, puntos_totales, nivel_actual)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  return stmt.run(data.nombre_usuario, data.correo, data.contrasena, data.vidas || 3, data.racha_actual || 0, data.racha_maxima || 0, data.fecha_ultima_actividad, data.puntos_totales || 0, data.nivel_actual || 1);
+  return stmt.run(data.nombre_usuario, data.correo, data.contrasena, data.vidas || data.racha_actual || data.racha_maxima || data.fecha_ultima_actividad, data.puntos_totales || data.nivel_actual );
 }
 
 function updateProgress(data) {
@@ -147,19 +151,21 @@ function updateProgress(data) {
 function seedData() {
   const db = getDB();
 
+
+
   // Check if courses exist
   const courses = db.prepare('SELECT COUNT(*) as count FROM Curso').get();
   if (courses.count === 0) {
     // Insert sample courses
     db.prepare(`
-      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio', '24 horas');
+      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad)
+      VALUES (?, ?, ?, ?, ?)
+    `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio');
 
     db.prepare(`
-      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', '/images/icono_pseudocodigo.png', '/images/pseudo_banner.jpg', 'Principiante', '12 horas');
+      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad)
+      VALUES (?, ?, ?, ?, ?)
+    `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', 'https://cdn-icons-png.flaticon.com/512/2103/2103626.png', 'https://cdn-icons-png.flaticon.com/512/2103/2103626.png', 'Principiante');
 
     // Insert modules, lessons, exercises for course 1
     db.prepare(`
@@ -179,4 +185,4 @@ function seedData() {
   }
 }
 
-module.exports = { getDB, initSchema, seedData, getStudents, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress };
+module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress };

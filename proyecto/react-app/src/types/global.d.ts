@@ -14,6 +14,7 @@ declare global {
       };
       db: {
         getStudents: () => Promise<any[]>;
+        getStudent: (studentId: number) => Promise<any>;
         getCourses: () => Promise<any[]>;
         getModules: (courseId: number) => Promise<any[]>;
         getLessons: (moduleId: number) => Promise<any[]>;

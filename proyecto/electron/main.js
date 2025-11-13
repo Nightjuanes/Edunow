@@ -8,6 +8,7 @@ const {
   initSchema,
   seedData,
   getStudents,
+  getStudent,
   getCourses,
   getModules,
   getLessons,
@@ -55,6 +56,7 @@ app.whenReady().then(() => {
 
   // --- IPC database handlers ---
   ipcMain.handle('db:getStudents', () => getStudents());
+  ipcMain.handle('db:getStudent', (event, studentId) => getStudent(studentId));
   ipcMain.handle('db:getCourses', () => getCourses());
   ipcMain.handle('db:getModules', (event, courseId) => getModules(courseId));
   ipcMain.handle('db:getLessons', (event, moduleId) => getLessons(moduleId));

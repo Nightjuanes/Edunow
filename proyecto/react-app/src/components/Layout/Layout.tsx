@@ -1,9 +1,41 @@
 import { Link, Outlet } from "react-router-dom";
+import { useState, useEffect } from "react";
 import "./Layout.css";
-import logo from "../edunowlogo.png"; 
+import logo from "../edunowlogo.png";
 
+
+interface Student {
+  id_estudiante: number;
+  nombre_usuario: string;
+  correo: string;
+  vidas: number;
+  racha_actual: number;
+  racha_maxima: number;
+  nivel_actual: number;
+  // other fields...
+}
 
 export default function Layout() {
+  const [student, setStudent] = useState<Student | null>(null);
+
+  useEffect(() => {
+    async function fetchStudent() {
+      try {
+        if (window.edunow?.db) {
+          const studentData = await window.edunow.db.getStudent(1); // Assuming student ID 1
+          setStudent(studentData);
+        }
+      } catch (error) {
+        console.error('Error fetching student:', error);
+      }
+    }
+    fetchStudent();
+  }, []);
+
+  const renderHearts = (lives: number) => {
+    return '❤️'.repeat(lives);
+  };
+
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -26,9 +58,9 @@ export default function Layout() {
       <main className="main">
         <header className="topbar">
           <div className="stats">
-            <span>🔥 20 días</span>
-            <span>🚀 Nivel 5</span>
-            <span>❤️❤️❤️</span>
+            <span>🔥 {student ? student.racha_actual : 0} días</span>
+            <span>🚀 Nivel {student ? student.nivel_actual : 1}</span>
+            <span>{student ? renderHearts(student.vidas) : '❤️❤️❤️'}</span>
           </div>
         </header>
         <section className="content">
