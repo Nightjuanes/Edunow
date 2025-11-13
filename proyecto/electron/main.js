@@ -1,14 +1,29 @@
 // proyecto/electron/main.js
-const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const { app, BrowserWindow, ipcMain } = require('electron');
+
+// --- Base de datos ---
+const {
+  getDB,
+  initSchema,
+  seedData,
+  getStudents,
+  getStudent,
+  getCourses,
+  getModules,
+  getLessons,
+  getExercises,
+  getProgress,
+  addStudent,
+  updateProgress
+} = require('./db');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const MODEL = process.env.MODEL || 'llama3.1:8b';
 
-// Si tu versión de Electron/Node no trae fetch global, instala node-fetch y usa:
-// const fetch = require('node-fetch');
-
 let win;
+
+// --- Crea la ventana principal ---
 function createWindow() {
   win = new BrowserWindow({
     width: 1200,
@@ -21,20 +36,46 @@ function createWindow() {
     },
   });
 
-  // DEV: carga tu React dev server
-  // win.loadURL('http://localhost:5173');
-  // PROD: carga el index.html generado
-  win.loadFile(path.join(__dirname, '../react-app/dist/index.html'));
-
-  // Ajusta esta línea según tu flujo. Si usas Vite en react-app:
+  // ⚙️ Si estás en desarrollo, usa el server de React
   win.loadURL('http://localhost:5173');
+
+  // ⚙️ Si ya compilaste el front, carga el index.html
+  // win.loadFile(path.join(__dirname, '../react-app/dist/index.html'));
 }
 
-app.whenReady().then(createWindow);
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+// --- Cuando Electron está listo ---
+app.whenReady().then(() => {
+  // Inicializar la base de datos
+  const db = getDB();
+  initSchema(db);
+  seedData();
+  console.log('✅ Base de datos creada o actualizada correctamente.');
 
-// --- IPC streaming a Ollama ---
+  // Crear ventana
+  createWindow();
+
+  // --- IPC database handlers ---
+  ipcMain.handle('db:getStudents', () => getStudents());
+  ipcMain.handle('db:getStudent', (event, studentId) => getStudent(studentId));
+  ipcMain.handle('db:getCourses', () => getCourses());
+  ipcMain.handle('db:getModules', (event, courseId) => getModules(courseId));
+  ipcMain.handle('db:getLessons', (event, moduleId) => getLessons(moduleId));
+  ipcMain.handle('db:getExercises', (event, lessonId) => getExercises(lessonId));
+  ipcMain.handle('db:getProgress', (event, studentId) => getProgress(studentId));
+  ipcMain.handle('db:addStudent', (event, data) => addStudent(data));
+  ipcMain.handle('db:updateProgress', (event, data) => updateProgress(data));
+});
+
+// Cierra correctamente
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+// --- Chat con Ollama ---
 const activeControllers = new Map();
 
 ipcMain.on('chat:stream', async (event, { id, messages }) => {

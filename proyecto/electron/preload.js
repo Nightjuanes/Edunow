@@ -19,5 +19,16 @@ contextBridge.exposeInMainWorld('edunow', {
         ipcRenderer.send('chat:cancel', { id });
       }
     };
+  },
+  db: {
+    getStudents: () => ipcRenderer.invoke('db:getStudents'),
+    getStudent: (studentId) => ipcRenderer.invoke('db:getStudent', studentId),
+    getCourses: () => ipcRenderer.invoke('db:getCourses'),
+    getModules: (courseId) => ipcRenderer.invoke('db:getModules', courseId),
+    getLessons: (moduleId) => ipcRenderer.invoke('db:getLessons', moduleId),
+    getExercises: (lessonId) => ipcRenderer.invoke('db:getExercises', lessonId),
+    getProgress: (studentId) => ipcRenderer.invoke('db:getProgress', studentId),
+    addStudent: (data) => ipcRenderer.invoke('db:addStudent', data),
+    updateProgress: (data) => ipcRenderer.invoke('db:updateProgress', data)
   }
 });
