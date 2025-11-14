@@ -23,6 +23,7 @@ export default function ProfeNow() {
   const [editingChatId, setEditingChatId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const endRef = useRef<HTMLDivElement | null>(null);
+  const assistantContentRef = useRef("");
 
   useEffect(() => {
     loadChats();
@@ -82,6 +83,7 @@ export default function ProfeNow() {
     setInput("");
     const userMsg: ChatMessage = { role: "user", content: text };
     const assistantPlaceholder: ChatMessage = { role: "assistant", content: "" };
+    assistantContentRef.current = "";
 
     // Add user message to DB and state
     await window.edunow.db.addMessage(activeChat, userMsg.role, userMsg.content);
@@ -101,9 +103,10 @@ export default function ProfeNow() {
     const stream = window.edunow.chatStream(history, chatId);
 
     stream.onChunk((delta: string) => {
+      assistantContentRef.current += delta;
       setMessages(prev => prev.map((m, i) =>
         i === prev.length - 1 && m.role === "assistant"
-          ? { ...m, content: m.content + delta }
+          ? { ...m, content: assistantContentRef.current }
           : m
       ));
     });
@@ -111,18 +114,15 @@ export default function ProfeNow() {
     stream.onDone(async (payload: any) => {
       setLoading(false);
       if (payload.error) {
+        assistantContentRef.current = "Error: " + payload.error;
         setMessages(prev => prev.map((m, i) =>
           i === prev.length - 1 && m.role === "assistant"
-            ? { ...m, content: "Error: " + payload.error }
+            ? { ...m, content: assistantContentRef.current }
             : m
         ));
-      } else {
-        // Save the final assistant message to DB
-        const finalMsg = messages[messages.length - 1];
-        if (finalMsg.role === "assistant") {
-          await window.edunow!.db.addMessage(activeChat, finalMsg.role, finalMsg.content);
-        }
       }
+      // Save the final assistant message to DB
+      await window.edunow!.db.addMessage(activeChat, "assistant", assistantContentRef.current);
     });
   }
 

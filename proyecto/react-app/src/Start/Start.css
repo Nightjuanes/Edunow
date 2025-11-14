@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Holtwood+One+SC&display=swap');
 .start-container {
-  background-image: url('C:\NATALIA\7\CAPSTONE DP\Edunow\proyecto\react-app\src\assets\img\start.png'); /* Usa tu imagen aquí */
+  background-image: url('public/images/start.png'); /* Usa tu imagen aquí */
   background-size: cover;
   background-position: center;
   height: 100vh;
