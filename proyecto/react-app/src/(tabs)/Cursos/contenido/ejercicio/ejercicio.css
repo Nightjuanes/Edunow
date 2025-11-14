@@ -1,0 +1,238 @@
+.ejercicio-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ejercicio-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.ejercicio-container p {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.matching-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 30px;
+  position: relative;
+}
+
+.lines-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.terms-column, .definitions-column {
+  flex: 1;
+}
+
+.terms-column h3, .definitions-column h3 {
+  text-align: center;
+  color: #444;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+}
+
+.term-item, .def-item {
+  background-color: #fff;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+}
+
+.term-item:hover, .def-item:hover {
+  border-color: #007bff;
+  background-color: #e7f3ff;
+}
+
+.term-item.selected, .def-item.selected {
+  border-color: #007bff;
+  background-color: #cce7ff;
+  box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+}
+
+.term-item.correct {
+  border-color: #28a745;
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.term-item.incorrect {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.def-item.correct {
+  border-color: #28a745;
+  background-color: #d4edda;
+}
+
+.def-item.incorrect {
+  border-color: #dc3545;
+  background-color: #f8d7da;
+}
+
+.submit-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 12px 24px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.submit-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.result {
+  text-align: center;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.result p {
+  margin: 5px 0;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.result ul {
+  text-align: left;
+  max-width: 400px;
+  margin: 10px auto;
+}
+
+.result li {
+  margin: 5px 0;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.correct-match {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.incorrect-match {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Word Search Styles */
+.word-search-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.grid-container {
+  border: 2px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.word-grid {
+  border-collapse: collapse;
+}
+
+.grid-cell {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  vertical-align: middle;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  font-weight: bold;
+  font-size: 1.2em;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.grid-cell:hover {
+  background-color: #f0f0f0;
+}
+
+.grid-cell.selected {
+  background-color: #cce7ff;
+  border-color: #007bff;
+}
+
+.grid-cell.found {
+  background-color: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+  font-weight: bold;
+}
+
+.words-list {
+  text-align: center;
+}
+
+.words-list h3 {
+  color: #444;
+  margin-bottom: 10px;
+}
+
+.words-list ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.words-list li {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 8px 12px;
+  font-weight: bold;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.words-list li.found {
+  background-color: #d4edda;
+  border-color: #28a745;
+  color: #155724;
+  text-decoration: line-through;
+}

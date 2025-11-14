@@ -208,6 +208,78 @@ function seedData() {
       VALUES (?, ?, ?, ?, ?, ?)
     `).run(1, '¿Cuál es una energía renovable?', 'selección múltiple', 'Solar', 10, 1);
   }
+
+  // Check if pseudocode module exists
+  const pseudocodeModules = db.prepare('SELECT COUNT(*) as count FROM Modulo WHERE id_curso = 2').get();
+  if (pseudocodeModules.count === 0) {
+    // Add module, lesson, and exercises for pseudocode course (id_curso=2)
+    const moduleResult = db.prepare(`
+      INSERT INTO Modulo (id_curso, titulo_modulo, descripcion_modulo, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(2, 'Estructuras Básicas', 'Introducción a las estructuras fundamentales del pseudocódigo', 1);
+
+    const moduleId = moduleResult.lastInsertRowid;
+
+    const lessonResult = db.prepare(`
+      INSERT INTO Leccion (id_modulo, titulo_leccion, contenido, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(moduleId, 'Términos y Definiciones', 'Aprende los términos básicos del pseudocódigo', 1);
+
+    const lessonId = lessonResult.lastInsertRowid;
+
+    const terms = ["Algoritmo", "Variable", "Ciclo", "Condicional", "Función"];
+    const definitions = [
+      "Secuencia de pasos para resolver un problema.",
+      "Espacio en memoria para almacenar datos.",
+      "Estructura que repite instrucciones.",
+      "Estructura que ejecuta código basado en condición.",
+      "Bloque de código reutilizable."
+    ];
+    const correctMatches = {
+      "Algoritmo": "Secuencia de pasos para resolver un problema.",
+      "Variable": "Espacio en memoria para almacenar datos.",
+      "Ciclo": "Estructura que repite instrucciones.",
+      "Condicional": "Estructura que ejecuta código basado en condición.",
+      "Función": "Bloque de código reutilizable."
+    };
+
+    db.prepare(`
+      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(lessonId, JSON.stringify({ terms, definitions }), 'empareja', JSON.stringify(correctMatches), 20, 1);
+
+    // Add word search exercise
+    const words = ["ALGORITMO", "VARIABLE", "CICLO", "CONDICIONAL", "FUNCION", "PSEUDOCODIGO", "ENTRADA", "SALIDA", "PROCESO", "SI", "SINO", "PARA", "MIENTRAS", "REPETIR", "HASTA"];
+    db.prepare(`
+      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(lessonId, JSON.stringify({ words, gridSize: 15 }), 'sopa_de_letras', JSON.stringify(words), 30, 2);
+  } else {
+    // Module exists, check if word search exists
+    const wordSearchExists = db.prepare(`
+      SELECT COUNT(*) as count FROM Ejercicio e
+      JOIN Leccion l ON e.id_leccion = l.id_leccion
+      JOIN Modulo m ON l.id_modulo = m.id_modulo
+      WHERE m.id_curso = 2 AND e.tipo = 'sopa_de_letras'
+    `).get();
+    if (wordSearchExists.count === 0) {
+      // Find the lesson ID for pseudocode
+      const lesson = db.prepare(`
+        SELECT l.id_leccion FROM Leccion l
+        JOIN Modulo m ON l.id_modulo = m.id_modulo
+        WHERE m.id_curso = 2 AND m.titulo_modulo = 'Estructuras Básicas'
+        AND l.titulo_leccion = 'Términos y Definiciones'
+      `).get();
+      if (lesson) {
+        // Add word search exercise
+        const words = ["ALGORITMO", "VARIABLE", "CICLO", "CONDICIONAL", "FUNCION", "PSEUDOCODIGO", "ENTRADA", "SALIDA", "PROCESO", "SI", "SINO", "PARA", "MIENTRAS", "REPETIR", "HASTA"];
+        db.prepare(`
+          INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(lesson.id_leccion, JSON.stringify({ words, gridSize: 15 }), 'sopa_de_letras', JSON.stringify(words), 30, 2);
+      }
+    }
+  }
 }
 
 function createChat(studentId, title) {
