@@ -15,11 +15,17 @@ const {
   getExercises,
   getProgress,
   addStudent,
-  updateProgress
+  updateProgress,
+  createChat,
+  getChatsForStudent,
+  deleteChat,
+  addMessage,
+  getMessagesForChat,
+  updateChatTitle
 } = require('./db');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
-const MODEL = process.env.MODEL || 'llama3.1:8b';
+const MODEL = process.env.MODEL || 'gemma:2b';
 
 let win;
 
@@ -64,6 +70,12 @@ app.whenReady().then(() => {
   ipcMain.handle('db:getProgress', (event, studentId) => getProgress(studentId));
   ipcMain.handle('db:addStudent', (event, data) => addStudent(data));
   ipcMain.handle('db:updateProgress', (event, data) => updateProgress(data));
+  ipcMain.handle('db:createChat', (event, studentId, title) => createChat(studentId, title));
+  ipcMain.handle('db:getChatsForStudent', (event, studentId) => getChatsForStudent(studentId));
+  ipcMain.handle('db:deleteChat', (event, chatId) => deleteChat(chatId));
+  ipcMain.handle('db:addMessage', (event, chatId, role, content) => addMessage(chatId, role, content));
+  ipcMain.handle('db:getMessagesForChat', (event, chatId) => getMessagesForChat(chatId));
+  ipcMain.handle('db:updateChatTitle', (event, chatId, title) => updateChatTitle(chatId, title));
 });
 
 // Cierra correctamente

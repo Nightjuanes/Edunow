@@ -1,14 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Holtwood+One+SC&family=Inter:wght@300;400;500&display=swap');
 
 /* === Layout general === */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;   /* sin scroll de página */
+}
+
 .profenow-container {
   display: grid;
   grid-template-columns: 250px 1fr;
-  height: 100vh;
+  height: 100vh;      /* alto fijo a la pantalla */
   background: #f5f7fb;
   color: #1b2230;
   font-family: "Inter", sans-serif;
+  overflow: hidden;   /* nada de scroll aquí */
 }
+
 
 /* === Sidebar del historial de chats === */
 .chat-sidebar {
@@ -75,8 +84,12 @@
   font-weight: 600;
 }
 
-/* === Botón de eliminar chat === */
-.delete-chat-btn {
+.chat-title {
+  flex: 1;
+}
+
+/* === Botones de editar y eliminar chat === */
+.edit-btn, .delete-btn {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -85,18 +98,64 @@
   transition: color 0.2s;
 }
 
-.delete-chat-btn:hover {
+.edit-btn:hover {
+  color: #247ba0;
+}
+
+.delete-btn:hover {
   color: #ff4c4c;
 }
 
-/* === Área principal (chat y header) === */
+.edit-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.edit-input {
+  flex: 1;
+  border: 1px solid #dcdfe4;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  font-family: "Inter", sans-serif;
+}
+
+.edit-input:focus {
+  border-color: #247ba0;
+  outline: none;
+}
+
+.save-btn, .cancel-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 2px 4px;
+  transition: color 0.2s;
+}
+
+.save-btn:hover {
+  color: #28a745;
+}
+
+.cancel-btn:hover {
+  color: #dc3545;
+}
+
 .main-chat {
   display: flex;
   flex-direction: column;
+  height: 100vh;   /* 🔥 alto fijo: toda la pantalla disponible */
+  min-height: 0;
+  overflow: hidden; /* que no cree scroll propio */
 }
 
 /* === Encabezado superior === */
 .header {
+  /* antes estaba absolute */
+  position: static;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -108,6 +167,7 @@
   letter-spacing: 1px;
   font-weight: 400;
 }
+
 
 .header .tab {
   font-size: 1.2rem;
@@ -123,14 +183,16 @@
 
 /* === Área del chat === */
 .chat {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1;            /* ocupa todo el espacio disponible entre header y footer */
+  min-height: 0;
+  overflow-y: auto;   /* aquí va el scroll */
   padding: 20px 40px;
   display: flex;
   flex-direction: column;
   gap: 12px;
   scroll-behavior: smooth;
 }
+
 
 /* === Mensajes === */
 .msg {
@@ -177,13 +239,17 @@
 
 /* === Área del input (footer) === */
 .composer {
+  /* quitamos position absolute */
+  position: static;
   border-top: 1px solid #e2e4e8;
   padding: 12px 24px;
   background: #fff;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;   /* no se encoge, siempre visible */
 }
+
 
 .composer-form {
   display: flex;
@@ -257,6 +323,28 @@
 .chat::-webkit-scrollbar-thumb:hover {
   background: #aeb3ba;
 }
+
+
+.profenow-container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  height: 100vh;        /* ocupa solo la altura de la pantalla */
+  background: #f5f7fb;
+  color: #1b2230;
+  font-family: "Inter", sans-serif;
+  overflow: hidden;     /* evita que este contenedor agregue scroll extra */
+}
+.main-chat {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;      /* importante para que el hijo scrollable funcione bien */
+  position: relative; /* ya no hace falta 100vh aquí */
+}
+
+
+
+
 
 /* === Animaciones === */
 @keyframes fadeIn {

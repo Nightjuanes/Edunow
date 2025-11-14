@@ -92,6 +92,23 @@ function initSchema(db) {
       FOREIGN KEY (id_estudiante) REFERENCES Estudiante (id_estudiante),
       FOREIGN KEY (id_recompensa) REFERENCES Recompensa (id_recompensa)
     );
+
+    CREATE TABLE IF NOT EXISTS Chat (
+      id_chat INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_estudiante INTEGER NOT NULL,
+      titulo TEXT NOT NULL,
+      fecha_creacion TEXT NOT NULL,
+      FOREIGN KEY (id_estudiante) REFERENCES Estudiante (id_estudiante)
+    );
+
+    CREATE TABLE IF NOT EXISTS Mensaje (
+      id_mensaje INTEGER PRIMARY KEY AUTOINCREMENT,
+      id_chat INTEGER NOT NULL,
+      role TEXT NOT NULL,
+      content TEXT NOT NULL,
+      fecha TEXT NOT NULL,
+      FOREIGN KEY (id_chat) REFERENCES Chat (id_chat)
+    );
   `);
 }
 
@@ -151,7 +168,15 @@ function updateProgress(data) {
 function seedData() {
   const db = getDB();
 
-
+  // Check if students exist
+  const students = db.prepare('SELECT COUNT(*) as count FROM Estudiante').get();
+  if (students.count === 0) {
+    // Insert default student
+    db.prepare(`
+      INSERT INTO Estudiante (nombre_usuario, correo, contrasena, vidas, racha_actual, racha_maxima, fecha_ultima_actividad, puntos_totales, nivel_actual)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run('UsuarioDemo', 'demo@edunow.com', 'password123', 4, 0, 0, null, 0, 1);
+  }
 
   // Check if courses exist
   const courses = db.prepare('SELECT COUNT(*) as count FROM Curso').get();
@@ -185,4 +210,45 @@ function seedData() {
   }
 }
 
-module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress };
+function createChat(studentId, title) {
+  const db = getDB();
+  const stmt = db.prepare(`
+    INSERT INTO Chat (id_estudiante, titulo, fecha_creacion)
+    VALUES (?, ?, ?)
+  `);
+  const result = stmt.run(studentId, title, new Date().toISOString());
+  return result.lastInsertRowid;
+}
+
+function getChatsForStudent(studentId) {
+  const db = getDB();
+  return db.prepare('SELECT * FROM Chat WHERE id_estudiante = ? ORDER BY fecha_creacion DESC').all(studentId);
+}
+
+function deleteChat(chatId) {
+  const db = getDB();
+  db.prepare('DELETE FROM Mensaje WHERE id_chat = ?').run(chatId);
+  db.prepare('DELETE FROM Chat WHERE id_chat = ?').run(chatId);
+}
+
+function addMessage(chatId, role, content) {
+  const db = getDB();
+  const stmt = db.prepare(`
+    INSERT INTO Mensaje (id_chat, role, content, fecha)
+    VALUES (?, ?, ?, ?)
+  `);
+  return stmt.run(chatId, role, content, new Date().toISOString());
+}
+
+function getMessagesForChat(chatId) {
+  const db = getDB();
+  return db.prepare('SELECT * FROM Mensaje WHERE id_chat = ? ORDER BY fecha').all(chatId);
+}
+
+function updateChatTitle(chatId, newTitle) {
+  const db = getDB();
+  const stmt = db.prepare('UPDATE Chat SET titulo = ? WHERE id_chat = ?');
+  return stmt.run(newTitle, chatId);
+}
+
+module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle };

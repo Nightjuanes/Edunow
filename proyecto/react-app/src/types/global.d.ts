@@ -13,6 +13,7 @@ declare global {
         cancel: () => void;
       };
       db: {
+        updateChatTitle(editingChatId: number, arg1: string): unknown;
         getStudents: () => Promise<any[]>;
         getStudent: (studentId: number) => Promise<any>;
         getCourses: () => Promise<any[]>;
@@ -22,6 +23,11 @@ declare global {
         getProgress: (studentId: number) => Promise<any[]>;
         addStudent: (data: any) => Promise<any>;
         updateProgress: (data: any) => Promise<any>;
+        createChat: (studentId: number, title: string) => Promise<number>;
+        getChatsForStudent: (studentId: number) => Promise<any[]>;
+        deleteChat: (chatId: number) => Promise<void>;
+        addMessage: (chatId: number, role: string, content: string) => Promise<void>;
+        getMessagesForChat: (chatId: number) => Promise<any[]>;
       };
     };
   }
