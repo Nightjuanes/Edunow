@@ -23,15 +23,18 @@ function Cursos() {
         if (window.edunow?.db) {
           const courses = await window.edunow.db.getCourses();
           // Map to add local images if needed
-          const mappedCourses = courses.map(course => ({
-            id: course.id_curso,
-            titulo: course.titulo,
-            descripcion: course.descripcion,
-            imagen: course.imagen_curso,
-            banner: course.banner,
-            duracion: course.duracion,
-            nivel: course.nivel_dificultad
-          }));
+          const mappedCourses = courses.map(course => {
+            const isCircuitsCourse = course.titulo.toLowerCase().includes('circuito');
+            return {
+              id: course.id_curso,
+              titulo: course.titulo,
+              descripcion: course.descripcion,
+              imagen: isCircuitsCourse ? '/images/circuito.png' : course.imagen_curso,
+              banner: isCircuitsCourse ? '/images/circuitos.jpg' : course.banner,
+              duracion: course.duracion,
+              nivel: course.nivel_dificultad
+            };
+          });
           setCursos(mappedCourses);
           if (mappedCourses.length > 0) setCursoSeleccionado(mappedCourses[0]);
         }

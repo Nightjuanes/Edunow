@@ -379,6 +379,234 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         )}
       </div>
     );
+  } else if (exercise.tipo === 'crucigrama') {
+    // Circuit Diagram Completion Exercise with Drag & Drop
+    const circuitData = JSON.parse(exercise.pregunta);
+    const correctAnswers = JSON.parse(exercise.respuesta_correcta);
+    const [draggedComponents, setDraggedComponents] = useState<{[key: string]: string}>({});
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [score, setScore] = useState(0);
+
+    const handleDragStart = (e: React.DragEvent, component: string) => {
+      e.dataTransfer.setData('text/plain', component);
+      e.dataTransfer.setData('text/source', 'palette');
+    };
+
+    const handleDrop = (e: React.DragEvent, placeholderIndex: number) => {
+      e.preventDefault();
+      const component = e.dataTransfer.getData('text/plain');
+      const source = e.dataTransfer.getData('text/source');
+
+      // Only allow drops from palette
+      if (source === 'palette' && !isSubmitted) {
+        setDraggedComponents(prev => ({
+          ...prev,
+          [placeholderIndex]: component
+        }));
+      }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+      e.preventDefault();
+    };
+
+    const handleRemoveComponent = (placeholderIndex: number) => {
+      if (!isSubmitted) {
+        setDraggedComponents(prev => {
+          const newDragged = {...prev};
+          delete newDragged[placeholderIndex];
+          return newDragged;
+        });
+      }
+    };
+
+    const handleSubmitCircuit = async () => {
+      let correctCount = 0;
+      correctAnswers.forEach((answer: string, index: number) => {
+        if (draggedComponents[index]?.toLowerCase() === answer.toLowerCase()) {
+          correctCount++;
+        }
+      });
+
+      const calculatedScore = Math.round((correctCount / correctAnswers.length) * exercise.puntos);
+      setScore(calculatedScore);
+      setIsSubmitted(true);
+
+      try {
+        await (window as any).edunow.db.updateProgress({
+          id_estudiante: studentId,
+          id_ejercicio: exercise.id_ejercicio,
+          estado: 'completado',
+          intentos: 1,
+          fecha_completado: new Date().toISOString(),
+          puntaje_obtenido: calculatedScore
+        });
+      } catch (error) {
+        console.error('Error saving progress:', error);
+      }
+
+      onComplete(calculatedScore);
+    };
+
+    return (
+      <div className="ejercicio-container">
+        <h2>Completar Diagrama de Circuito</h2>
+        <p>Arrastra los componentes desde abajo hacia los espacios vacíos del diagrama.</p>
+
+        <div className="circuit-diagram">
+          <div className="diagram-display">
+            {circuitData.diagram.map((line: string, lineIndex: number) => (
+              <div key={lineIndex} className="diagram-line">
+                {line.split(/(\[.*?\])/).map((part, partIndex) => {
+                  if (part.startsWith('[') && part.endsWith(']')) {
+                    const placeholderIndex = circuitData.placeholders.indexOf(part);
+                    if (placeholderIndex !== -1) {
+                      const isCorrect = isSubmitted && draggedComponents[placeholderIndex]?.toLowerCase() === correctAnswers[placeholderIndex]?.toLowerCase();
+                      const isIncorrect = isSubmitted && draggedComponents[placeholderIndex] && !isCorrect;
+
+                      return (
+                        <div
+                          key={partIndex}
+                          className={`component-drop-zone ${isCorrect ? 'correct' : ''} ${isIncorrect ? 'incorrect' : ''}`}
+                          onDrop={(e) => handleDrop(e, placeholderIndex)}
+                          onDragOver={handleDragOver}
+                          onClick={() => handleRemoveComponent(placeholderIndex)}
+                        >
+                          {draggedComponents[placeholderIndex] || 'Soltar aquí'}
+                        </div>
+                      );
+                    }
+                  }
+                  return <span key={partIndex}>{part}</span>;
+                })}
+              </div>
+            ))}
+          </div>
+
+          {!isSubmitted && (
+            <div className="component-palette">
+              <h3>Componentes disponibles (arrastra hacia el diagrama):</h3>
+              <div className="draggable-components">
+                {correctAnswers.map((component: string, index: number) => (
+                  <div
+                    key={index}
+                    className="draggable-component"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, component)}
+                  >
+                    {component}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {isSubmitted && (
+            <div className="component-hints">
+              <h3>Resultados:</h3>
+              <ul>
+                {correctAnswers.map((answer: string, index: number) => (
+                  <li key={index} className={draggedComponents[index]?.toLowerCase() === answer.toLowerCase() ? 'correct-placement' : 'incorrect-placement'}>
+                    <strong>{circuitData.placeholders[index]}:</strong> {answer}
+                    {draggedComponents[index]?.toLowerCase() === answer.toLowerCase() ? ' ✓' : ` ✗ (Colocaste: ${draggedComponents[index] || 'nada'})`}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {!isSubmitted && (
+          <button className="submit-btn" onClick={handleSubmitCircuit}>
+            Enviar Respuestas
+          </button>
+        )}
+
+        {isSubmitted && (
+          <div className="result">
+            <p>Puntuación: {score} / {exercise.puntos}</p>
+            <p>Componentes colocados correctamente: {Object.values(draggedComponents).filter((component, index) => component?.toLowerCase() === correctAnswers[index]?.toLowerCase()).length} / {correctAnswers.length}</p>
+          </div>
+        )}
+      </div>
+    );
+  } else if (exercise.tipo === 'opcion_multiple') {
+    const questions = JSON.parse(exercise.pregunta);
+    const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: string}>({});
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [score, setScore] = useState(0);
+
+    const handleAnswerSelect = (questionIndex: number, answer: string) => {
+      setSelectedAnswers({...selectedAnswers, [questionIndex]: answer});
+    };
+
+    const handleSubmitMultipleChoice = async () => {
+      const correctAnswers = JSON.parse(exercise.respuesta_correcta);
+      let correctCount = 0;
+
+      correctAnswers.forEach((correct: string, index: number) => {
+        if (selectedAnswers[index] === correct) correctCount++;
+      });
+
+      const calculatedScore = Math.round((correctCount / correctAnswers.length) * exercise.puntos);
+      setScore(calculatedScore);
+      setIsSubmitted(true);
+
+      try {
+        await (window as any).edunow.db.updateProgress({
+          id_estudiante: studentId,
+          id_ejercicio: exercise.id_ejercicio,
+          estado: 'completado',
+          intentos: 1,
+          fecha_completado: new Date().toISOString(),
+          puntaje_obtenido: calculatedScore
+        });
+      } catch (error) {
+        console.error('Error saving progress:', error);
+      }
+
+      onComplete(calculatedScore);
+    };
+
+    return (
+      <div className="ejercicio-container">
+        <h2>Opción Múltiple "Electrón no perdona errores"</h2>
+        <p>Elige la respuesta correcta. No hay pistas suaves, va directo.</p>
+
+        <div className="multiple-choice-container">
+          {questions.map((q: any, index: number) => (
+            <div key={index} className="question">
+              <h4>{q.question}</h4>
+              {q.options.map((option: string) => (
+                <label key={option} className="option">
+                  <input
+                    type="radio"
+                    name={`question-${index}`}
+                    value={option[0]}
+                    onChange={() => handleAnswerSelect(index, option[0])}
+                    disabled={isSubmitted}
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {!isSubmitted && (
+          <button className="submit-btn" onClick={handleSubmitMultipleChoice}>
+            Enviar Respuestas
+          </button>
+        )}
+
+        {isSubmitted && (
+          <div className="result">
+            <p>Puntuación: {score} / {exercise.puntos}</p>
+            <p>Respuestas correctas: {Object.values(selectedAnswers).filter((answer, index) => answer === JSON.parse(exercise.respuesta_correcta)[index]).length} / {questions.length}</p>
+          </div>
+        )}
+      </div>
+    );
   } else {
     return <div>Tipo de ejercicio no soportado</div>;
   }

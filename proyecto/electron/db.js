@@ -178,20 +178,25 @@ function seedData() {
     `).run('UsuarioDemo', 'demo@edunow.com', 'password123', 4, 0, 0, null, 0, 1);
   }
 
-  // Check if courses exist
-  const courses = db.prepare('SELECT COUNT(*) as count FROM Curso').get();
-  if (courses.count === 0) {
-    // Insert sample courses
-    db.prepare(`
-      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad)
-      VALUES (?, ?, ?, ?, ?)
-    `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio');
+  // Insert sample courses (INSERT OR IGNORE ensures they exist with specific IDs)
+  db.prepare(`
+    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad)
+    VALUES (1, ?, ?, ?, ?, ?)
+  `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio');
 
-    db.prepare(`
-      INSERT INTO Curso (titulo, descripcion, imagen_curso, banner, nivel_dificultad)
-      VALUES (?, ?, ?, ?, ?)
-    `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', 'https://cdn-icons-png.flaticon.com/512/2103/2103626.png', 'https://cdn-icons-png.flaticon.com/512/2103/2103626.png', 'Principiante');
+  db.prepare(`
+    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad)
+    VALUES (2, ?, ?, ?, ?, ?)
+  `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', '/images/icono_pseudocodigo.png', '/images/pseudo_banner.jpg', 'Principiante');
 
+  db.prepare(`
+    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad)
+    VALUES (3, ?, ?, ?, ?, ?)
+  `).run('Introducción a Circuitos', 'Aprende los fundamentos de los circuitos eléctricos, componentes y leyes básicas.', '/images/circuito.png', '/images/circuitos.jpg', 'Principiante');
+
+  // Check if modules for course 1 exist
+  const modules1 = db.prepare('SELECT COUNT(*) as count FROM Modulo WHERE id_curso = 1').get();
+  if (modules1.count === 0) {
     // Insert modules, lessons, exercises for course 1
     db.prepare(`
       INSERT INTO Modulo (id_curso, titulo_modulo, descripcion_modulo, orden)
@@ -277,6 +282,194 @@ function seedData() {
           INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
           VALUES (?, ?, ?, ?, ?, ?)
         `).run(lesson.id_leccion, JSON.stringify({ words, gridSize: 15 }), 'sopa_de_letras', JSON.stringify(words), 30, 2);
+      }
+    }
+  }
+
+  // Check if circuits course modules exist
+  const circuitsModules = db.prepare('SELECT COUNT(*) as count FROM Modulo WHERE id_curso = 3').get();
+  if (circuitsModules.count === 0) {
+    // Add modules, lessons, and exercises for circuits course (id_curso=3)
+    const module1Result = db.prepare(`
+      INSERT INTO Modulo (id_curso, titulo_modulo, descripcion_modulo, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(3, 'Componentes Básicos', 'Conoce los componentes fundamentales de los circuitos eléctricos', 1);
+
+    const module1Id = module1Result.lastInsertRowid;
+
+    const lesson1Result = db.prepare(`
+      INSERT INTO Leccion (id_modulo, titulo_leccion, contenido, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(module1Id, 'Símbolos y Componentes', 'Aprende los símbolos y funciones de los componentes básicos', 1);
+
+    const lesson1Id = lesson1Result.lastInsertRowid;
+
+    // Matching exercise for components
+    const terms = ["Resistor", "Capacitor", "Inductor", "Batería", "Interruptor"];
+    const definitions = [
+      "Componente que limita el flujo de corriente.",
+      "Componente que almacena carga eléctrica.",
+      "Componente que almacena energía en campo magnético.",
+      "Fuente de energía eléctrica.",
+      "Dispositivo que abre o cierra el circuito."
+    ];
+    const correctMatches = {
+      "Resistor": "Componente que limita el flujo de corriente.",
+      "Capacitor": "Componente que almacena carga eléctrica.",
+      "Inductor": "Componente que almacena energía en campo magnético.",
+      "Batería": "Fuente de energía eléctrica.",
+      "Interruptor": "Dispositivo que abre o cierra el circuito."
+    };
+
+    db.prepare(`
+      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(lesson1Id, JSON.stringify({ terms, definitions }), 'empareja', JSON.stringify(correctMatches), 20, 1);
+
+    // Word search for circuit terms
+    const words = ["RESISTOR", "CAPACITOR", "INDUCTOR", "BATERIA", "INTERRUPTOR", "VOLTAJE", "CORRIENTE", "RESISTENCIA"];
+    db.prepare(`
+      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(lesson1Id, JSON.stringify({ words, gridSize: 12 }), 'sopa_de_letras', JSON.stringify(words), 25, 2);
+
+    // Add second module
+    const module2Result = db.prepare(`
+      INSERT INTO Modulo (id_curso, titulo_modulo, descripcion_modulo, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(3, 'Leyes de Circuitos', 'Estudia las leyes fundamentales que rigen el comportamiento de los circuitos', 2);
+
+    const module2Id = module2Result.lastInsertRowid;
+
+    const lesson2Result = db.prepare(`
+      INSERT INTO Leccion (id_modulo, titulo_leccion, contenido, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(module2Id, 'Ley de Ohm y Leyes de Kirchhoff', 'Comprende las leyes básicas de los circuitos eléctricos', 1);
+
+    const lesson2Id = lesson2Result.lastInsertRowid;
+
+    // Matching exercise for laws
+    const terms2 = ["Ley de Ohm", "Ley de Kirchhoff de Corrientes", "Ley de Kirchhoff de Voltajes"];
+    const definitions2 = [
+      "V = I × R: El voltaje es igual a la corriente por la resistencia.",
+      "La suma de corrientes que entran a un nodo es igual a la suma de corrientes que salen.",
+      "La suma de voltajes en un lazo cerrado es cero."
+    ];
+    const correctMatches2 = {
+      "Ley de Ohm": "V = I × R: El voltaje es igual a la corriente por la resistencia.",
+      "Ley de Kirchhoff de Corrientes": "La suma de corrientes que entran a un nodo es igual a la suma de corrientes que salen.",
+      "Ley de Kirchhoff de Voltajes": "La suma de voltajes en un lazo cerrado es cero."
+    };
+
+    db.prepare(`
+      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(lesson2Id, JSON.stringify({ terms: terms2, definitions: definitions2 }), 'empareja', JSON.stringify(correctMatches2), 20, 1);
+
+    // Add third module: Ejercicios
+    const module3Result = db.prepare(`
+      INSERT INTO Modulo (id_curso, titulo_modulo, descripcion_modulo, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(3, 'Ejercicios', 'Practica con ejercicios interactivos de circuitos', 3);
+
+    const module3Id = module3Result.lastInsertRowid;
+
+    const lesson3Result = db.prepare(`
+      INSERT INTO Leccion (id_modulo, titulo_leccion, contenido, orden)
+      VALUES (?, ?, ?, ?)
+    `).run(module3Id, 'Ejercicios Prácticos', 'Pon a prueba tus conocimientos con crucigramas y preguntas', 1);
+
+    const lesson3Id = lesson3Result.lastInsertRowid;
+
+    // Multiple choice exercise
+    const multipleChoiceData = [
+      {
+        question: "¿Qué pasa en un circuito abierto?",
+        options: ["A) El LED enciende", "B) La corriente fluye parcialmente", "C) No fluye corriente", "D) Aumenta el voltaje"],
+        correct: "C"
+      },
+      {
+        question: "El voltaje es…",
+        options: ["A) El flujo de electrones", "B) La presión que impulsa la corriente", "C) La oposición al paso de corriente", "D) La carga del circuito"],
+        correct: "B"
+      },
+      {
+        question: "Conectar el LED al revés provoca:",
+        options: ["A) Se quema", "B) Parpadea", "C) No enciende", "D) Aumenta la resistencia"],
+        correct: "C"
+      },
+      {
+        question: "Un cortocircuito ocurre cuando…",
+        options: ["A) El LED recibe menos voltaje", "B) La corriente pasa por la carga", "C) El positivo y el negativo se conectan sin carga", "D) El interruptor está cerrado"],
+        correct: "C"
+      },
+      {
+        question: "¿Por qué se usa una resistencia?",
+        options: ["A) Para aumentar el voltaje", "B) Para proteger componentes delicados", "C) Para cerrar un circuito", "D) Para invertir polaridades"],
+        correct: "B"
+      }
+    ];
+
+    const mcCorrectAnswers = ["C", "B", "C", "C", "B"];
+
+    db.prepare(`
+      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(lesson3Id, JSON.stringify(multipleChoiceData), 'opcion_multiple', JSON.stringify(mcCorrectAnswers), 25, 2);
+  } else {
+    // Modules exist, check if we need to update the circuit exercise
+    const lesson = db.prepare(`
+      SELECT l.id_leccion FROM Leccion l
+      JOIN Modulo m ON l.id_modulo = m.id_modulo
+      WHERE m.id_curso = 3 AND m.titulo_modulo = 'Ejercicios'
+      AND l.titulo_leccion = 'Ejercicios Prácticos'
+    `).get();
+
+    if (lesson) {
+      // Circuit Diagram Completion Exercise
+      const circuitData = {
+        diagram: [
+          "     [BATERIA]     ",
+          "        |         ",
+          "        |         ",
+          "     [RESISTOR]   ",
+          "        |         ",
+          "        |         ",
+          "     [LED]        ",
+          "        |         ",
+          "        |         ",
+          "   [INTERRUPTOR]  "
+        ],
+        placeholders: ["[BATERIA]", "[RESISTOR]", "[LED]", "[INTERRUPTOR]"],
+        hints: [
+          "BATERIA - Fuente de energía eléctrica",
+          "RESISTOR - Limita el flujo de corriente",
+          "LED - Diodo emisor de luz",
+          "INTERRUPTOR - Abre o cierra el circuito"
+        ]
+      };
+
+      const correctAnswers = ["BATERIA", "RESISTOR", "LED", "INTERRUPTOR"];
+
+      // Check if circuit diagram exercise already exists and update it
+      const existingCircuitExercise = db.prepare(`
+        SELECT id_ejercicio FROM Ejercicio
+        WHERE id_leccion = ? AND orden = 1
+      `).get(lesson.id_leccion);
+
+      if (existingCircuitExercise) {
+        // Update existing exercise
+        db.prepare(`
+          UPDATE Ejercicio
+          SET pregunta = ?, tipo = ?, respuesta_correcta = ?, puntos = ?
+          WHERE id_ejercicio = ?
+        `).run(JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, existingCircuitExercise.id_ejercicio);
+      } else {
+        // Insert new exercise
+        db.prepare(`
+          INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).run(lesson.id_leccion, JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, 1);
       }
     }
   }
