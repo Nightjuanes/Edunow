@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('edunow', {
     getLessons: (moduleId) => ipcRenderer.invoke('db:getLessons', moduleId),
     getExercises: (lessonId) => ipcRenderer.invoke('db:getExercises', lessonId),
     getProgress: (studentId) => ipcRenderer.invoke('db:getProgress', studentId),
+    getCoursesInProgress: (studentId) => ipcRenderer.invoke('db:getCoursesInProgress', studentId),
     addStudent: (data) => ipcRenderer.invoke('db:addStudent', data),
     updateProgress: (data) => ipcRenderer.invoke('db:updateProgress', data),
     createChat: (studentId, title) => ipcRenderer.invoke('db:createChat', studentId, title),

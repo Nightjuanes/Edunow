@@ -17,6 +17,7 @@ const {
   getLessons,
   getExercises,
   getProgress,
+  getCoursesInProgress,
   addStudent,
   updateProgress,
   createChat,
@@ -72,6 +73,7 @@ app.whenReady().then(() => {
   ipcMain.handle('db:getLessons', (event, moduleId) => getLessons(moduleId));
   ipcMain.handle('db:getExercises', (event, lessonId) => getExercises(lessonId));
   ipcMain.handle('db:getProgress', (event, studentId) => getProgress(studentId));
+  ipcMain.handle('db:getCoursesInProgress', (event, studentId) => getCoursesInProgress(studentId));
   ipcMain.handle('db:addStudent', (event, data) => addStudent(data));
   ipcMain.handle('db:updateProgress', (event, data) => updateProgress(data));
   ipcMain.handle('db:createChat', (event, studentId, title) => createChat(studentId, title));

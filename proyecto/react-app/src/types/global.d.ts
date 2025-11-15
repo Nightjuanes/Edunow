@@ -21,6 +21,7 @@ declare global {
         getLessons: (moduleId: number) => Promise<any[]>;
         getExercises: (lessonId: number) => Promise<any[]>;
         getProgress: (studentId: number) => Promise<any[]>;
+        getCoursesInProgress: (studentId: number) => Promise<any[]>;
         addStudent: (data: any) => Promise<any>;
         updateProgress: (data: any) => Promise<any>;
         createChat: (studentId: number, title: string) => Promise<number>;

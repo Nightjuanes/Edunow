@@ -75,6 +75,7 @@ function initSchema(db) {
       intentos INTEGER DEFAULT 0,
       fecha_completado TEXT,
       puntaje_obtenido INTEGER DEFAULT 0,
+      completado_correctamente INTEGER DEFAULT 0,
       FOREIGN KEY (id_estudiante) REFERENCES Estudiante (id_estudiante),
       FOREIGN KEY (id_ejercicio) REFERENCES Ejercicio (id_ejercicio)
     );
@@ -149,6 +150,49 @@ function getProgress(studentId) {
   return db.prepare('SELECT * FROM Progreso WHERE id_estudiante = ?').all(studentId);
 }
 
+function getCoursesInProgress(studentId) {
+  const db = getDB();
+  // Get courses where student has progress
+  const coursesWithProgress = db.prepare(`
+    SELECT DISTINCT c.id_curso, c.titulo, c.descripcion, c.imagen_curso, c.banner, c.nivel_dificultad, c.duracion
+    FROM Curso c
+    JOIN Modulo m ON c.id_curso = m.id_curso
+    JOIN Leccion l ON m.id_modulo = l.id_modulo
+    JOIN Ejercicio e ON l.id_leccion = e.id_leccion
+    JOIN Progreso p ON e.id_ejercicio = p.id_ejercicio
+    WHERE p.id_estudiante = ?
+  `).all(studentId);
+
+  // For each course, calculate progress
+  const result = coursesWithProgress.map(course => {
+    // Total exercises in course
+    const totalExercises = db.prepare(`
+      SELECT COUNT(*) as count FROM Ejercicio e
+      JOIN Leccion l ON e.id_leccion = l.id_leccion
+      JOIN Modulo m ON l.id_modulo = m.id_modulo
+      WHERE m.id_curso = ?
+    `).get(course.id_curso).count;
+
+    // Completed correctly exercises
+    const completedExercises = db.prepare(`
+      SELECT COUNT(*) as count FROM Progreso p
+      JOIN Ejercicio e ON p.id_ejercicio = e.id_ejercicio
+      JOIN Leccion l ON e.id_leccion = l.id_leccion
+      JOIN Modulo m ON l.id_modulo = m.id_modulo
+      WHERE m.id_curso = ? AND p.id_estudiante = ? AND p.completado_correctamente = 1
+    `).get(course.id_curso, studentId).count;
+
+    const progressPercentage = totalExercises > 0 ? Math.round((completedExercises / totalExercises) * 100) : 0;
+
+    return {
+      ...course,
+      progressPercentage
+    };
+  });
+
+  return result;
+}
+
 function addStudent(data) {
   const db = getDB();
   const stmt = db.prepare(`
@@ -175,11 +219,15 @@ function updateProgress(data) {
     }
   }
 
+  // Get the points from the exercise to determine if completed correctly
+  const exercise = db.prepare('SELECT puntos FROM Ejercicio WHERE id_ejercicio = ?').get(data.id_ejercicio);
+  const completadoCorrectamente = (data.estado === 'completado' && exercise && data.puntaje_obtenido === exercise.puntos) ? 1 : 0;
+
   const stmt = db.prepare(`
-    INSERT OR REPLACE INTO Progreso (id_estudiante, id_ejercicio, estado, intentos, fecha_completado, puntaje_obtenido)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT OR REPLACE INTO Progreso (id_estudiante, id_ejercicio, estado, intentos, fecha_completado, puntaje_obtenido, completado_correctamente)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
-  const result = stmt.run(data.id_estudiante, data.id_ejercicio, data.estado, data.intentos, data.fecha_completado, data.puntaje_obtenido);
+  const result = stmt.run(data.id_estudiante, data.id_ejercicio, data.estado, data.intentos, data.fecha_completado, data.puntaje_obtenido, completadoCorrectamente);
 
   // If exercise completed, check for lives decrement
   if (data.estado === 'completado') {
@@ -261,10 +309,38 @@ function seedData() {
       VALUES (?, ?, ?, ?)
     `).run(1, '¿Qué son las energías renovables?', 'Contenido sobre energías renovables...', 1);
 
-    db.prepare(`
-      INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(1, '¿Cuál es una energía renovable?', 'selección múltiple', 'Solar', 10, 1);
+    // Insert combined exercise with all questions
+    const questions = [
+      {
+        question: "¿Cuál es una energía renovable?",
+        options: ["A) Solar", "B) Nuclear", "C) Fósil", "D) Eólica"],
+        explanation: "A) → Correcta: La energía solar es renovable ya que proviene del sol."
+      },
+      {
+        question: "¿Cuál es el principal componente que mide la eficiencia de un panel solar?",
+        options: ["A) Temperatura ambiente", "B) Velocidad del viento", "C) Cantidad de radiación recibida", "D) Nivel de ruido"],
+        explanation: "A) afecta pero no determina la eficiencia.\nB) no influye directamente.\nC) → Correcta: la eficiencia depende de cuánta radiación el panel convierte en electricidad.\nD) no tiene relación."
+      },
+      {
+        question: "¿Cuál es la función principal de un aerogenerador?",
+        options: ["A) Almacenar electricidad", "B) Convertir energía mecánica en electricidad", "C) Producir calor", "D) Transportar energía"],
+        explanation: "A) esa es función de baterías.\nB) → Correcta: convierte energía del viento → giro → electricidad.\nC) no produce calor.\nD) no transporta energía, solo la genera."
+      }
+    ];
+    // Check if exercise already exists and update it
+    const existingExercise = db.prepare('SELECT id_ejercicio FROM Ejercicio WHERE id_leccion = 1 AND orden = 1').get();
+    if (existingExercise) {
+      db.prepare(`
+        UPDATE Ejercicio
+        SET pregunta = ?, tipo = ?, respuesta_correcta = ?, puntos = ?
+        WHERE id_ejercicio = ?
+      `).run(JSON.stringify(questions), 'opcion_multiple', JSON.stringify(['A', 'C', 'B']), 30, existingExercise.id_ejercicio);
+    } else {
+      db.prepare(`
+        INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(1, JSON.stringify(questions), 'opcion_multiple', JSON.stringify(['A', 'C', 'B']), 30, 1);
+    }
   }
 
   // Check if pseudocode module exists
@@ -585,4 +661,4 @@ function checkAndUpdateLives(studentId) {
   return false; // Not updated
 }
 
-module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle, checkAndUpdateLives };
+module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, getCoursesInProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle, checkAndUpdateLives };

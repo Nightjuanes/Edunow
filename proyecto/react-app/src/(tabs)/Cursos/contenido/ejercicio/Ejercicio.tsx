@@ -9,6 +9,18 @@ interface Exercise {
   puntos: number;
 }
 
+interface Student {
+  id_estudiante: number;
+  nombre_usuario: string;
+  correo: string;
+  vidas: number;
+  racha_actual: number;
+  racha_maxima: number;
+  nivel_actual: number;
+  puntos_totales: number;
+  fecha_bloqueo_vidas: string | null;
+}
+
 interface EjercicioProps {
   exercise: Exercise;
   studentId: number;
@@ -22,6 +34,7 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [student, setStudent] = useState<Student | null>(null);
   const [lines, setLines] = useState<{x1: number, y1: number, x2: number, y2: number, correct: boolean}[]>([]);
 
   // Word search states
@@ -259,8 +272,24 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
     }
   }, [exercise]);
 
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        if (window.edunow?.db) {
+          const studentData = await window.edunow.db.getStudent(studentId);
+          setStudent(studentData);
+        }
+      } catch (error) {
+        console.error('Error fetching student:', error);
+      }
+    };
+    fetchStudent();
+  }, [studentId]);
+
+  let content;
+
   if (exercise.tipo === 'empareja') {
-    return (
+    content = (
       <div className="ejercicio-container">
         <h2>Ejercicio de Emparejamiento</h2>
         <p>Empareja los términos con sus definiciones haciendo clic en un término y luego en su definición correspondiente.</p>
@@ -329,7 +358,7 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
       </div>
     );
   } else if (exercise.tipo === 'sopa_de_letras') {
-    return (
+    content = (
       <div className="ejercicio-container">
         <h2>Sopa de Letras</h2>
         <p>Encuentra las palabras ocultas en la cuadrícula seleccionándolas con el mouse.</p>
@@ -463,7 +492,7 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
       onComplete(calculatedScore);
     };
 
-    return (
+    content = (
       <div className="ejercicio-container">
         <h2>Completar Diagrama de Circuito</h2>
         <p>Arrastra los componentes desde abajo hacia los espacios vacíos del diagrama.</p>
@@ -588,7 +617,7 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
       onComplete(calculatedScore);
     };
 
-    return (
+    content = (
       <div className="ejercicio-container">
         <h2>Opción Múltiple "Electrón no perdona errores"</h2>
         <p>Elige la respuesta correcta. No hay pistas suaves, va directo.</p>
@@ -623,13 +652,52 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
           <div className="result">
             <p>Puntuación: {score} / {exercise.puntos}</p>
             <p>Respuestas correctas: {Object.values(selectedAnswers).filter((answer, index) => answer === JSON.parse(exercise.respuesta_correcta)[index]).length} / {questions.length}</p>
+            <h4>Explicaciones:</h4>
+            <ul>
+              {questions.map((q: any, index: number) => (
+                <li key={index}>
+                  <strong>{q.question}</strong><br/>
+                  {q.explanation}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>
     );
   } else {
-    return <div>Tipo de ejercicio no soportado</div>;
+    content = <div>Tipo de ejercicio no soportado</div>;
   }
+
+  const timeRemainingText = (() => {
+    if (!student) return '';
+    if (student.vidas !== 0) return '';
+    const blockTime = student.fecha_bloqueo_vidas ? new Date(student.fecha_bloqueo_vidas!).getTime() : Date.now();
+    const now = Date.now();
+    const timePassed = now - blockTime;
+    const oneHour = 60 * 60 * 1000;
+    const timeRemaining = Math.max(0, oneHour - timePassed);
+    const minutes = Math.floor(timeRemaining / (1000 * 60));
+    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  })();
+
+  return (
+    <>
+      {content}
+      {isSubmitted && student && student.vidas === 0 && (
+        <div className="lives-reloading-overlay">
+          <div className="overlay-background"></div>
+          <div className="loading-content">
+            <div className="spinner"></div>
+            <h2>Tus vidas se están recargando</h2>
+            <p>Espera un momento mientras recuperas tus vidas...</p>
+            <p>Próxima vida en: {timeRemainingText}</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default Ejercicio;
