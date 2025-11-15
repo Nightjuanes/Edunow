@@ -24,7 +24,8 @@ function initSchema(db) {
       racha_maxima INTEGER DEFAULT 0,
       fecha_ultima_actividad TEXT,
       puntos_totales INTEGER DEFAULT 0,
-      nivel_actual INTEGER DEFAULT 1
+      nivel_actual INTEGER DEFAULT 1,
+      fecha_bloqueo_vidas TEXT
     );
 
     CREATE TABLE IF NOT EXISTS Curso (
@@ -159,26 +160,57 @@ function addStudent(data) {
 
 function updateProgress(data) {
   const db = getDB();
+
+  // Check if student is blocked
+  const student = db.prepare('SELECT vidas, fecha_bloqueo_vidas FROM Estudiante WHERE id_estudiante = ?').get(data.id_estudiante);
+  if (student.vidas === 0) {
+    const blockTime = new Date(student.fecha_bloqueo_vidas);
+    const now = new Date();
+    const oneHour = 60 * 60 * 1000; // 1 hour in ms
+    if (now - blockTime < oneHour) {
+      throw new Error('Student is blocked from doing exercises. Wait 1 hour for life renewal.');
+    } else {
+      // Renew one life
+      db.prepare('UPDATE Estudiante SET vidas = 1, fecha_bloqueo_vidas = NULL WHERE id_estudiante = ?').run(data.id_estudiante);
+    }
+  }
+
   const stmt = db.prepare(`
     INSERT OR REPLACE INTO Progreso (id_estudiante, id_ejercicio, estado, intentos, fecha_completado, puntaje_obtenido)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
   const result = stmt.run(data.id_estudiante, data.id_ejercicio, data.estado, data.intentos, data.fecha_completado, data.puntaje_obtenido);
 
-  // If exercise completed and scored points, update student points and check for level up
-  if (data.estado === 'completado' && data.puntaje_obtenido > 0) {
+  // If exercise completed, check for lives decrement
+  if (data.estado === 'completado') {
     // Get the points from the exercise
     const exercise = db.prepare('SELECT puntos FROM Ejercicio WHERE id_ejercicio = ?').get(data.id_ejercicio);
     if (exercise) {
-      // Add points to student's total
-      db.prepare('UPDATE Estudiante SET puntos_totales = puntos_totales + ? WHERE id_estudiante = ?').run(exercise.puntos, data.id_estudiante);
+      // Check if score is perfect
+      const isPerfect = data.puntaje_obtenido === exercise.puntos;
+      if (!isPerfect) {
+        // Decrement lives
+        const currentLives = db.prepare('SELECT vidas FROM Estudiante WHERE id_estudiante = ?').get(data.id_estudiante).vidas;
+        const newLives = Math.max(0, currentLives - 1);
+        db.prepare('UPDATE Estudiante SET vidas = ? WHERE id_estudiante = ?').run(newLives, data.id_estudiante);
+        if (newLives === 0) {
+          // Set block time
+          db.prepare('UPDATE Estudiante SET fecha_bloqueo_vidas = ? WHERE id_estudiante = ?').run(new Date().toISOString(), data.id_estudiante);
+        }
+      }
 
-      // Check if student levels up (every 100 points)
-      const student = db.prepare('SELECT puntos_totales, nivel_actual FROM Estudiante WHERE id_estudiante = ?').get(data.id_estudiante);
-      if (student.puntos_totales >= 100) {
-        const newLevel = student.nivel_actual + 1;
-        const remainingPoints = student.puntos_totales - 100;
-        db.prepare('UPDATE Estudiante SET nivel_actual = ?, puntos_totales = ? WHERE id_estudiante = ?').run(newLevel, remainingPoints, data.id_estudiante);
+      // Update points and level if scored points
+      if (data.puntaje_obtenido > 0) {
+        // Add points to student's total
+        db.prepare('UPDATE Estudiante SET puntos_totales = puntos_totales + ? WHERE id_estudiante = ?').run(exercise.puntos, data.id_estudiante);
+
+        // Check if student levels up (every 100 points)
+        const studentAfter = db.prepare('SELECT puntos_totales, nivel_actual FROM Estudiante WHERE id_estudiante = ?').get(data.id_estudiante);
+        if (studentAfter.puntos_totales >= 100) {
+          const newLevel = studentAfter.nivel_actual + 1;
+          const remainingPoints = studentAfter.puntos_totales - 100;
+          db.prepare('UPDATE Estudiante SET nivel_actual = ?, puntos_totales = ? WHERE id_estudiante = ?').run(newLevel, remainingPoints, data.id_estudiante);
+        }
       }
     }
   }
@@ -448,42 +480,49 @@ function seedData() {
 
     if (lesson) {
       // Crossword Exercise
-      const crosswordData = {
-        gridSize: 12,
-        words: [
-          { word: 'BATERIA', row: 0, col: 0, direction: 'across', clue: 'Fuente de energía eléctrica' },
-          { word: 'RESISTOR', row: 0, col: 1, direction: 'down', clue: 'Componente que limita el flujo de corriente' },
-          { word: 'LED', row: 2, col: 3, direction: 'across', clue: 'Diodo emisor de luz' },
-          { word: 'INTERRUPTOR', row: 4, col: 0, direction: 'across', clue: 'Dispositivo que abre o cierra el circuito' },
-          { word: 'CAPACITOR', row: 10, col: 0, direction: 'across', clue: 'Componente que almacena carga eléctrica' },
-          { word: 'INDUCTOR', row: 10, col: 2, direction: 'down', clue: 'Componente que almacena energía en campo magnético' },
-          { word: 'VOLTAJE', row: 6, col: 4, direction: 'across', clue: 'Diferencia de potencial eléctrico' },
-          { word: 'CORRIENTE', row: 6, col: 5, direction: 'down', clue: 'Flujo de electrones' },
-          { word: 'DIODO', row: 8, col: 6, direction: 'across', clue: 'Componente que permite corriente en una dirección' }
+      const circuitData = {
+        diagram: [
+          "     [BATERIA]     ",
+          "        |         ",
+          "        |         ",
+          "     [RESISTOR]   ",
+          "        |         ",
+          "        |         ",
+          "     [LED]        ",
+          "        |         ",
+          "        |         ",
+          "   [INTERRUPTOR]  "
+        ],
+        placeholders: ["[BATERIA]", "[RESISTOR]", "[LED]", "[INTERRUPTOR]"],
+        hints: [
+          "BATERIA - Fuente de energía eléctrica",
+          "RESISTOR - Limita el flujo de corriente",
+          "LED - Diodo emisor de luz",
+          "INTERRUPTOR - Abre o cierra el circuito"
         ]
       };
 
-      const correctAnswers = ["BATERIA", "RESISTOR", "LED", "INTERRUPTOR", "CAPACITOR", "INDUCTOR", "VOLTAJE", "CORRIENTE", "DIODO"];
+      const correctAnswers = ["BATERIA", "RESISTOR", "LED", "INTERRUPTOR"];
 
-      // Check if crossword exercise already exists and update it
-      const existingCrosswordExercise = db.prepare(`
+      // Check if circuit diagram exercise already exists and update it
+      const existingCircuitExercise = db.prepare(`
         SELECT id_ejercicio FROM Ejercicio
         WHERE id_leccion = ? AND orden = 1
       `).get(lesson.id_leccion);
 
-      if (existingCrosswordExercise) {
+      if (existingCircuitExercise) {
         // Update existing exercise
         db.prepare(`
           UPDATE Ejercicio
           SET pregunta = ?, tipo = ?, respuesta_correcta = ?, puntos = ?
           WHERE id_ejercicio = ?
-        `).run(JSON.stringify(crosswordData), 'crucigrama', JSON.stringify(correctAnswers), 30, existingCrosswordExercise.id_ejercicio);
+        `).run(JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, existingCircuitExercise.id_ejercicio);
       } else {
         // Insert new exercise
         db.prepare(`
           INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
           VALUES (?, ?, ?, ?, ?, ?)
-        `).run(lesson.id_leccion, JSON.stringify(crosswordData), 'crucigrama', JSON.stringify(correctAnswers), 30, 1);
+        `).run(lesson.id_leccion, JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, 1);
       }
     }
   }
@@ -530,4 +569,20 @@ function updateChatTitle(chatId, newTitle) {
   return stmt.run(newTitle, chatId);
 }
 
-module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle };
+function checkAndUpdateLives(studentId) {
+  const db = getDB();
+  const student = db.prepare('SELECT vidas, fecha_bloqueo_vidas FROM Estudiante WHERE id_estudiante = ?').get(studentId);
+  if (student && student.vidas === 0 && student.fecha_bloqueo_vidas) {
+    const blockTime = new Date(student.fecha_bloqueo_vidas);
+    const now = new Date();
+    const oneHour = 60 * 60 * 1000; // 1 hour in ms
+    if (now - blockTime >= oneHour) {
+      // Renew one life
+      db.prepare('UPDATE Estudiante SET vidas = 1, fecha_bloqueo_vidas = NULL WHERE id_estudiante = ?').run(studentId);
+      return true; // Updated
+    }
+  }
+  return false; // Not updated
+}
+
+module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle, checkAndUpdateLives };

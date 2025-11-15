@@ -83,6 +83,9 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
       window.dispatchEvent(new CustomEvent('studentDataUpdated'));
     } catch (error) {
       console.error('Error saving progress:', error);
+      alert(error instanceof Error ? error.message : 'Error saving progress'); // Show block message
+      setIsSubmitted(false); // Allow retry or something
+      return;
     }
 
     onComplete(calculatedScore);
@@ -108,6 +111,9 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
       window.dispatchEvent(new CustomEvent('studentDataUpdated'));
     } catch (error) {
       console.error('Error saving progress:', error);
+      alert(error instanceof Error ? error.message : 'Error saving progress'); // Show block message
+      setIsSubmitted(false); // Allow retry or something
+      return;
     }
 
     onComplete(calculatedScore);
@@ -449,6 +455,9 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } catch (error) {
         console.error('Error saving progress:', error);
+        alert(error instanceof Error ? error.message : 'Error saving progress'); // Show block message
+        setIsSubmitted(false); // Allow retry or something
+        return;
       }
 
       onComplete(calculatedScore);
@@ -571,6 +580,9 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } catch (error) {
         console.error('Error saving progress:', error);
+        alert(error instanceof Error ? error.message : 'Error saving progress'); // Show block message
+        setIsSubmitted(false); // Allow retry or something
+        return;
       }
 
       onComplete(calculatedScore);
@@ -621,3 +633,4 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
 };
 
 export default Ejercicio;
+

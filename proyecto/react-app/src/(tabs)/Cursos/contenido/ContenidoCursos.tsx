@@ -3,6 +3,18 @@ import { useState, useEffect } from "react";
 import "./contenido.css";
 import Ejercicio from "./ejercicio/Ejercicio";
 
+interface Student {
+  id_estudiante: number;
+  nombre_usuario: string;
+  correo: string;
+  vidas: number;
+  racha_actual: number;
+  racha_maxima: number;
+  nivel_actual: number;
+  puntos_totales: number;
+  fecha_bloqueo_vidas: string | null;
+}
+
 function ContenidoCursos() {
   const { id } = useParams();
   const [modules, setModules] = useState<any[]>([]);
@@ -12,6 +24,11 @@ function ContenidoCursos() {
   const [exercises, setExercises] = useState<any[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<any | null>(null);
   const [courseTitle, setCourseTitle] = useState("");
+  const [student, setStudent] = useState<Student | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+
+  const isEnergyCourse = courseTitle.toLowerCase().includes('energ');
+  const progressIcons = isEnergyCourse ? ['☀️'] : ['📘',  '📗', '📙'];
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -29,8 +46,35 @@ function ContenidoCursos() {
         console.error("Error fetching course data:", error);
       }
     };
+
+    const fetchStudent = async () => {
+      try {
+        if (window.edunow?.db) {
+          const studentData = await window.edunow.db.getStudent(1);
+          setStudent(studentData);
+        }
+      } catch (error) {
+        console.error('Error fetching student:', error);
+      }
+    };
+
     fetchCourseData();
+    fetchStudent();
   }, [id]);
+
+  useEffect(() => {
+    if (student?.vidas === 0) {
+      const interval = setInterval(() => {
+        const blockTime = student.fecha_bloqueo_vidas ? new Date(student.fecha_bloqueo_vidas).getTime() : Date.now();
+        const now = Date.now();
+        const timePassed = now - blockTime;
+        const oneHour = 60 * 60 * 1000;
+        const remaining = Math.max(0, oneHour - timePassed);
+        setTimeRemaining(remaining);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [student]);
 
   const handleModuleClick = async (module: any) => {
     setSelectedModule(module);
@@ -71,8 +115,30 @@ function ContenidoCursos() {
     console.log("Exercise completed with score:", score);
   };
 
+  if (!student) {
+    return <div>Loading...</div>;
+  }
+
+  if (student.vidas === 0) {
+    const minutes = Math.floor(timeRemaining / (1000 * 60));
+    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+    return (
+      <div className="contenido-container" style={{ position: 'relative' }}>
+        <div className="lives-reloading-overlay">
+          <div className="loading-content">
+            <div className="spinner"></div>
+            <h2>Tus vidas se están recargando</h2>
+            <p>Espera un momento mientras recuperas tus vidas...</p>
+            <p>Próxima vida en: {minutes}:{seconds.toString().padStart(2, '0')}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="contenido-container">
+    <div className="contenido-container" style={{ position: 'relative' }}>
       <Link to="/cursos">
         <button className="boton-mis-cursos">Mis cursos</button>
       </Link>
@@ -80,9 +146,9 @@ function ContenidoCursos() {
 
       {!selectedModule && (
         <div className="mapa-progreso">
-          {modules.map((module) => (
+          {modules.map((module, index) => (
             <div key={module.id_modulo} className="etapa" onClick={() => handleModuleClick(module)}>
-              <div className="icono">📘</div>
+              <div className="icono">{progressIcons[index % progressIcons.length]}</div>
               <p className="etapa-titulo">{module.titulo_modulo}</p>
             </div>
           ))}
@@ -96,7 +162,7 @@ function ContenidoCursos() {
           <div className="exercises-list">
             {exercises.map((exercise) => (
               <div key={exercise.id_ejercicio} className="exercise-item" onClick={() => handleExerciseClick(exercise)}>
-                <p>Ejercicio de {exercise.tipo}</p>
+                <p>{exercise.tipo === 'pseudocodigo' ? '💻 ' : ''}Ejercicio de {exercise.tipo}</p>
               </div>
             ))}
           </div>

@@ -35,6 +35,7 @@ contextBridge.exposeInMainWorld('edunow', {
     deleteChat: (chatId) => ipcRenderer.invoke('db:deleteChat', chatId),
     addMessage: (chatId, role, content) => ipcRenderer.invoke('db:addMessage', chatId, role, content),
     getMessagesForChat: (chatId) => ipcRenderer.invoke('db:getMessagesForChat', chatId),
-    updateChatTitle: (chatId, newTitle) => ipcRenderer.invoke('db:updateChatTitle', chatId, newTitle)
+    updateChatTitle: (chatId, newTitle) => ipcRenderer.invoke('db:updateChatTitle', chatId, newTitle),
+    checkAndUpdateLives: (studentId) => ipcRenderer.invoke('db:checkAndUpdateLives', studentId)
   }
 });

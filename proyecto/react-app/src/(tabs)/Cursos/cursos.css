@@ -5,11 +5,14 @@
   justify-content: space-between;
   gap: 2rem;
   padding: 2rem;
+  position: relative;
 
   font-family: 'Holtwood One SC', serif;
   letter-spacing: 1px;
   font-weight: 100;
 }
+
+
 
 /* --- Columna izquierda --- */
 .cursos-lista {
@@ -116,3 +119,55 @@
   transform: translateY(-2px);
   box-shadow: 0px 6px 0px #8fbcc0;
 }
+
+/* Lives reloading overlay */
+
+.cursos-container-nolives {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2rem;
+  width: 90%;
+  height: 80%;
+  position: relative;
+  background-image: url('/images/llama no lives.gif');
+  font-family: 'Holtwood One SC', serif;
+  letter-spacing: 1px;
+  font-weight: 100;
+}
+
+
+.loading-content {
+  text-align: center;
+  color: rgb(255, 255, 255);
+  font-family: "Inter", sans-serif;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #f3f3f3;
+  border-top: 5px solid #b57cff;
+  border-radius: 50%;
+  animation: spin 3s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-content h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-family: 'Holtwood One SC', serif;
+  color: white;
+
+}
+
+.loading-content p {
+  font-size: 1rem;
+  color: white;
+}
+

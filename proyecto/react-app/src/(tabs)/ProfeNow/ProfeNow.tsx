@@ -216,24 +216,26 @@ export default function ProfeNow() {
                     className="edit-input"
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      saveChatTitle();
-                    }}
-                    className="save-btn"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      cancelEditing();
-                    }}
-                    className="cancel-btn"
-                  >
-                    ✕
-                  </button>
+                  <div className="edit-buttons">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        saveChatTitle();
+                      }}
+                      className="save-btn"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cancelEditing();
+                      }}
+                      className="cancel-btn"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <span className="chat-title">{chat.title}</span>

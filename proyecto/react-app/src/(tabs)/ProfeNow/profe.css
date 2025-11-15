@@ -108,13 +108,13 @@ html, body {
 
 .edit-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 5px;
   flex: 1;
 }
 
 .edit-input {
-  flex: 1;
+  width: 100%;
   border: 1px solid #dcdfe4;
   border-radius: 6px;
   padding: 4px 8px;
@@ -127,21 +127,34 @@ html, body {
   outline: none;
 }
 
+.edit-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+}
+
 .save-btn, .cancel-btn {
-  background: transparent;
+  background: #247ba0;
+  color: white;
   border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
   cursor: pointer;
-  font-size: 1rem;
-  padding: 2px 4px;
-  transition: color 0.2s;
+  transition: background 0.2s;
+  font-family: "Inter", sans-serif;
 }
 
 .save-btn:hover {
-  color: #28a745;
+  background: #1c6482;
+}
+
+.cancel-btn {
+  background: #dc3545;
 }
 
 .cancel-btn:hover {
-  color: #dc3545;
+  background: #c82333;
 }
 
 .main-chat {

@@ -42,6 +42,20 @@ export default function Layout() {
     return () => window.removeEventListener('studentDataUpdated', handleStudentUpdate);
   }, []);
 
+  useEffect(() => {
+    const checkLives = async () => {
+      if (window.edunow?.db) {
+        const updated = await window.edunow.db.checkAndUpdateLives(1);
+        if (updated) {
+          fetchStudent(); // Refresh student data
+        }
+      }
+    };
+
+    const interval = setInterval(checkLives, 10000); // Check every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const renderHearts = (lives: number) => {
     return '❤️'.repeat(lives);
   };
@@ -68,7 +82,7 @@ export default function Layout() {
       <main className="main">
         <header className="topbar">
           <div className="stats">
-            <span>EXP {student ? student.puntos_totales :0} Puntos</span>
+            <span>📚 EXP {student ? student.puntos_totales :0} Puntos</span>
             <span>🔥 {student ? student.racha_actual : 0} días</span>
             <span>🚀 Nivel {student ? student.nivel_actual : 1}</span>
             <span>{student ? renderHearts(student.vidas) : '❤️❤️❤️'}</span>

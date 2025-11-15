@@ -28,6 +28,7 @@ declare global {
         deleteChat: (chatId: number) => Promise<void>;
         addMessage: (chatId: number, role: string, content: string) => Promise<void>;
         getMessagesForChat: (chatId: number) => Promise<any[]>;
+        checkAndUpdateLives: (studentId: number) => Promise<boolean>;
       };
     };
   }

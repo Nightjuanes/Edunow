@@ -1,6 +1,9 @@
 // proyecto/electron/main.js
 const path = require('path');
-const { app, BrowserWindow, ipcMain } = require('electron');
+const electron = require('electron');
+const app = electron.app;
+const BrowserWindow = electron.BrowserWindow;
+const ipcMain = electron.ipcMain;
 
 // --- Base de datos ---
 const {
@@ -21,7 +24,8 @@ const {
   deleteChat,
   addMessage,
   getMessagesForChat,
-  updateChatTitle
+  updateChatTitle,
+  checkAndUpdateLives
 } = require('./db');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
@@ -76,6 +80,7 @@ app.whenReady().then(() => {
   ipcMain.handle('db:addMessage', (event, chatId, role, content) => addMessage(chatId, role, content));
   ipcMain.handle('db:getMessagesForChat', (event, chatId) => getMessagesForChat(chatId));
   ipcMain.handle('db:updateChatTitle', (event, chatId, title) => updateChatTitle(chatId, title));
+  ipcMain.handle('db:checkAndUpdateLives', (event, studentId) => checkAndUpdateLives(studentId));
 });
 
 // Cierra correctamente
