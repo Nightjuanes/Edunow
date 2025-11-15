@@ -163,7 +163,27 @@ function updateProgress(data) {
     INSERT OR REPLACE INTO Progreso (id_estudiante, id_ejercicio, estado, intentos, fecha_completado, puntaje_obtenido)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
-  return stmt.run(data.id_estudiante, data.id_ejercicio, data.estado, data.intentos, data.fecha_completado, data.puntaje_obtenido);
+  const result = stmt.run(data.id_estudiante, data.id_ejercicio, data.estado, data.intentos, data.fecha_completado, data.puntaje_obtenido);
+
+  // If exercise completed and scored points, update student points and check for level up
+  if (data.estado === 'completado' && data.puntaje_obtenido > 0) {
+    // Get the points from the exercise
+    const exercise = db.prepare('SELECT puntos FROM Ejercicio WHERE id_ejercicio = ?').get(data.id_ejercicio);
+    if (exercise) {
+      // Add points to student's total
+      db.prepare('UPDATE Estudiante SET puntos_totales = puntos_totales + ? WHERE id_estudiante = ?').run(exercise.puntos, data.id_estudiante);
+
+      // Check if student levels up (every 100 points)
+      const student = db.prepare('SELECT puntos_totales, nivel_actual FROM Estudiante WHERE id_estudiante = ?').get(data.id_estudiante);
+      if (student.puntos_totales >= 100) {
+        const newLevel = student.nivel_actual + 1;
+        const remainingPoints = student.puntos_totales - 100;
+        db.prepare('UPDATE Estudiante SET nivel_actual = ?, puntos_totales = ? WHERE id_estudiante = ?').run(newLevel, remainingPoints, data.id_estudiante);
+      }
+    }
+  }
+
+  return result;
 }
 
 function seedData() {
@@ -427,50 +447,43 @@ function seedData() {
     `).get();
 
     if (lesson) {
-      // Circuit Diagram Completion Exercise
-      const circuitData = {
-        diagram: [
-          "     [BATERIA]     ",
-          "        |         ",
-          "        |         ",
-          "     [RESISTOR]   ",
-          "        |         ",
-          "        |         ",
-          "     [LED]        ",
-          "        |         ",
-          "        |         ",
-          "   [INTERRUPTOR]  "
-        ],
-        placeholders: ["[BATERIA]", "[RESISTOR]", "[LED]", "[INTERRUPTOR]"],
-        hints: [
-          "BATERIA - Fuente de energía eléctrica",
-          "RESISTOR - Limita el flujo de corriente",
-          "LED - Diodo emisor de luz",
-          "INTERRUPTOR - Abre o cierra el circuito"
+      // Crossword Exercise
+      const crosswordData = {
+        gridSize: 12,
+        words: [
+          { word: 'BATERIA', row: 0, col: 0, direction: 'across', clue: 'Fuente de energía eléctrica' },
+          { word: 'RESISTOR', row: 0, col: 1, direction: 'down', clue: 'Componente que limita el flujo de corriente' },
+          { word: 'LED', row: 2, col: 3, direction: 'across', clue: 'Diodo emisor de luz' },
+          { word: 'INTERRUPTOR', row: 4, col: 0, direction: 'across', clue: 'Dispositivo que abre o cierra el circuito' },
+          { word: 'CAPACITOR', row: 10, col: 0, direction: 'across', clue: 'Componente que almacena carga eléctrica' },
+          { word: 'INDUCTOR', row: 10, col: 2, direction: 'down', clue: 'Componente que almacena energía en campo magnético' },
+          { word: 'VOLTAJE', row: 6, col: 4, direction: 'across', clue: 'Diferencia de potencial eléctrico' },
+          { word: 'CORRIENTE', row: 6, col: 5, direction: 'down', clue: 'Flujo de electrones' },
+          { word: 'DIODO', row: 8, col: 6, direction: 'across', clue: 'Componente que permite corriente en una dirección' }
         ]
       };
 
-      const correctAnswers = ["BATERIA", "RESISTOR", "LED", "INTERRUPTOR"];
+      const correctAnswers = ["BATERIA", "RESISTOR", "LED", "INTERRUPTOR", "CAPACITOR", "INDUCTOR", "VOLTAJE", "CORRIENTE", "DIODO"];
 
-      // Check if circuit diagram exercise already exists and update it
-      const existingCircuitExercise = db.prepare(`
+      // Check if crossword exercise already exists and update it
+      const existingCrosswordExercise = db.prepare(`
         SELECT id_ejercicio FROM Ejercicio
         WHERE id_leccion = ? AND orden = 1
       `).get(lesson.id_leccion);
 
-      if (existingCircuitExercise) {
+      if (existingCrosswordExercise) {
         // Update existing exercise
         db.prepare(`
           UPDATE Ejercicio
           SET pregunta = ?, tipo = ?, respuesta_correcta = ?, puntos = ?
           WHERE id_ejercicio = ?
-        `).run(JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, existingCircuitExercise.id_ejercicio);
+        `).run(JSON.stringify(crosswordData), 'crucigrama', JSON.stringify(correctAnswers), 30, existingCrosswordExercise.id_ejercicio);
       } else {
         // Insert new exercise
         db.prepare(`
           INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
           VALUES (?, ?, ?, ?, ?, ?)
-        `).run(lesson.id_leccion, JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, 1);
+        `).run(lesson.id_leccion, JSON.stringify(crosswordData), 'crucigrama', JSON.stringify(correctAnswers), 30, 1);
       }
     }
   }

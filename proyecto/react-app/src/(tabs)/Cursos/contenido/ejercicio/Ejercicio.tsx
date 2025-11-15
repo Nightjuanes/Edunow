@@ -79,6 +79,8 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         fecha_completado: new Date().toISOString(),
         puntaje_obtenido: calculatedScore
       });
+      // Notify to refresh student data
+      window.dispatchEvent(new CustomEvent('studentDataUpdated'));
     } catch (error) {
       console.error('Error saving progress:', error);
     }
@@ -102,6 +104,8 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         fecha_completado: new Date().toISOString(),
         puntaje_obtenido: calculatedScore
       });
+      // Notify to refresh student data
+      window.dispatchEvent(new CustomEvent('studentDataUpdated'));
     } catch (error) {
       console.error('Error saving progress:', error);
     }
@@ -441,6 +445,8 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
           fecha_completado: new Date().toISOString(),
           puntaje_obtenido: calculatedScore
         });
+        // Notify to refresh student data
+        window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } catch (error) {
         console.error('Error saving progress:', error);
       }
@@ -561,6 +567,8 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
           fecha_completado: new Date().toISOString(),
           puntaje_obtenido: calculatedScore
         });
+        // Notify to refresh student data
+        window.dispatchEvent(new CustomEvent('studentDataUpdated'));
       } catch (error) {
         console.error('Error saving progress:', error);
       }

@@ -19,18 +19,27 @@ interface Student {
 export default function Layout() {
   const [student, setStudent] = useState<Student | null>(null);
 
-  useEffect(() => {
-    async function fetchStudent() {
-      try {
-        if (window.edunow?.db) {
-          const studentData = await window.edunow.db.getStudent(1); // Assuming student ID 1
-          setStudent(studentData);
-        }
-      } catch (error) {
-        console.error('Error fetching student:', error);
+  const fetchStudent = async () => {
+    try {
+      if (window.edunow?.db) {
+        const studentData = await window.edunow.db.getStudent(1); // Assuming student ID 1
+        setStudent(studentData);
       }
+    } catch (error) {
+      console.error('Error fetching student:', error);
     }
+  };
+
+  useEffect(() => {
     fetchStudent();
+  }, []);
+
+  useEffect(() => {
+    const handleStudentUpdate = () => {
+      fetchStudent();
+    };
+    window.addEventListener('studentDataUpdated', handleStudentUpdate);
+    return () => window.removeEventListener('studentDataUpdated', handleStudentUpdate);
   }, []);
 
   const renderHearts = (lives: number) => {
@@ -59,7 +68,7 @@ export default function Layout() {
       <main className="main">
         <header className="topbar">
           <div className="stats">
-            <span>EXP {student ? student.puntos_totales : 0} Puntos</span>
+            <span>EXP {student ? student.puntos_totales :0} Puntos</span>
             <span>🔥 {student ? student.racha_actual : 0} días</span>
             <span>🚀 Nivel {student ? student.nivel_actual : 1}</span>
             <span>{student ? renderHearts(student.vidas) : '❤️❤️❤️'}</span>
