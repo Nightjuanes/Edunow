@@ -12,6 +12,7 @@ interface Student {
   racha_actual: number;
   racha_maxima: number;
   nivel_actual: number;
+  puntos_totales: number;
   // other fields...
 }
 
@@ -58,6 +59,7 @@ export default function Layout() {
       <main className="main">
         <header className="topbar">
           <div className="stats">
+            <span>EXP {student ? student.puntos_totales : 0} Puntos</span>
             <span>🔥 {student ? student.racha_actual : 0} días</span>
             <span>🚀 Nivel {student ? student.nivel_actual : 1}</span>
             <span>{student ? renderHearts(student.vidas) : '❤️❤️❤️'}</span>

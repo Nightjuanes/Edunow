@@ -33,7 +33,8 @@ function initSchema(db) {
       descripcion TEXT,
       imagen_curso TEXT,
       banner TEXT,
-      nivel_dificultad TEXT
+      nivel_dificultad TEXT,
+      duracion TEXT
     );
 
     CREATE TABLE IF NOT EXISTS Modulo (
@@ -180,19 +181,19 @@ function seedData() {
 
   // Insert sample courses (INSERT OR IGNORE ensures they exist with specific IDs)
   db.prepare(`
-    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad)
-    VALUES (1, ?, ?, ?, ?, ?)
-  `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio');
+    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
+    VALUES (1, ?, ?, ?, ?, ?, ?)
+  `).run('Energías Renovables', 'Explora soluciones y aprende cómo las energías renovables cambiarán el futuro. Solar, eólica y tecnologías innovadoras.', '/images/logoenergia.png', '/images/energias.jpg', 'Intermedio','10 horas');
 
   db.prepare(`
-    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad)
-    VALUES (2, ?, ?, ?, ?, ?)
-  `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', '/images/icono_pseudocodigo.png', '/images/pseudo_banner.jpg', 'Principiante');
+    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
+    VALUES (2, ?, ?, ?, ?, ?, ?)
+  `).run('Pseudo-código', 'Vuélvete un experto en el arte de la creación de algoritmos y pensamiento lógico.', '/images/icono_pseudocodigo.png', '/images/pseudo_banner.jpg', 'Principiante', '14 Horas');
 
   db.prepare(`
-    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad)
-    VALUES (3, ?, ?, ?, ?, ?)
-  `).run('Introducción a Circuitos', 'Aprende los fundamentos de los circuitos eléctricos, componentes y leyes básicas.', '/images/circuito.png', '/images/circuitos.jpg', 'Principiante');
+    INSERT OR IGNORE INTO Curso (id_curso, titulo, descripcion, imagen_curso, banner, nivel_dificultad, duracion)
+    VALUES (3, ?, ?, ?, ?, ?, ?)
+  `).run('Introducción a Circuitos', 'Aprende los fundamentos de los circuitos eléctricos, componentes y leyes básicas.', '/images/circuito.png', '/images/circuitos.jpg', 'Principiante', '20 Horas');
 
   // Check if modules for course 1 exist
   const modules1 = db.prepare('SELECT COUNT(*) as count FROM Modulo WHERE id_curso = 1').get();
