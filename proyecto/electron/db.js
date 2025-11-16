@@ -251,11 +251,13 @@ function updateProgress(data) {
     const blockTime = new Date(student.fecha_bloqueo_vidas);
     const now = new Date();
     const oneHour = 60 * 60 * 1000; // 1 hour in ms
-    if (now - blockTime < oneHour) {
-      throw new Error('Student is blocked from doing exercises. Wait 1 hour for life renewal.');
+    const hoursPassed = (now - blockTime) / oneHour;
+    const livesToRenew = Math.floor(hoursPassed);
+    const newLives = Math.min(4, livesToRenew);
+    if (newLives > 0) {
+      db.prepare('UPDATE Estudiante SET vidas = ?, fecha_bloqueo_vidas = NULL WHERE id_estudiante = ?').run(newLives, data.id_estudiante);
     } else {
-      // Renew one life
-      db.prepare('UPDATE Estudiante SET vidas = 1, fecha_bloqueo_vidas = NULL WHERE id_estudiante = ?').run(data.id_estudiante);
+      throw new Error('Student is blocked from doing exercises. Wait for life renewal.');
     }
   }
 
@@ -311,6 +313,15 @@ function updateProgress(data) {
 
 function seedData() {
   const db = getDB();
+
+  // Insert achievements
+  db.exec(`
+    INSERT OR IGNORE INTO Recompensa (id_recompensa, nombre, descripcion, icono) VALUES
+    (1, 'Primer ejercicio completado', 'Completaste tu primer ejercicio correctamente', 'icon1'),
+    (2, 'Racha de 7 días', 'Mantuviste una racha de 7 días consecutivos', 'icon2'),
+    (3, 'Nivel 5 alcanzado', 'Alcanzaste el nivel 5', 'icon3'),
+    (4, '100 ejercicios correctos', 'Completaste 100 ejercicios correctamente', 'icon4');
+  `);
 
   // Check if students exist
   const students = db.prepare('SELECT COUNT(*) as count FROM Estudiante').get();
@@ -695,9 +706,11 @@ function checkAndUpdateLives(studentId) {
     const blockTime = new Date(student.fecha_bloqueo_vidas);
     const now = new Date();
     const oneHour = 60 * 60 * 1000; // 1 hour in ms
-    if (now - blockTime >= oneHour) {
-      // Renew one life
-      db.prepare('UPDATE Estudiante SET vidas = 1, fecha_bloqueo_vidas = NULL WHERE id_estudiante = ?').run(studentId);
+    const hoursPassed = (now - blockTime) / oneHour;
+    const livesToRenew = Math.floor(hoursPassed);
+    const newLives = Math.min(4, livesToRenew);
+    if (newLives > 0) {
+      db.prepare('UPDATE Estudiante SET vidas = ?, fecha_bloqueo_vidas = NULL WHERE id_estudiante = ?').run(newLives, studentId);
       return true; // Updated
     }
   }
