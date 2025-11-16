@@ -202,6 +202,46 @@ function addStudent(data) {
   return stmt.run(data.nombre_usuario, data.correo, data.contrasena, data.vidas || data.racha_actual || data.racha_maxima || data.fecha_ultima_actividad, data.puntos_totales || data.nivel_actual );
 }
 
+function awardAchievements(studentId) {
+  const db = getDB();
+  const student = db.prepare('SELECT nivel_actual, racha_actual FROM Estudiante WHERE id_estudiante = ?').get(studentId);
+
+  // Correct exercises count
+  const correctCount = db.prepare('SELECT COUNT(*) as count FROM Progreso WHERE id_estudiante = ? AND completado_correctamente = 1').get(studentId).count;
+
+  // Check and award achievement 1: Primer ejercicio completado
+  if (correctCount >= 1) {
+    const exists = db.prepare('SELECT COUNT(*) as count FROM Estudiante_Recompensa WHERE id_estudiante = ? AND id_recompensa = ?').get(studentId, 1).count;
+    if (exists === 0) {
+      db.prepare('INSERT INTO Estudiante_Recompensa (id_estudiante, id_recompensa, fecha_obtenida) VALUES (?, ?, ?)').run(studentId, 1, new Date().toISOString());
+    }
+  }
+
+  // Achievement 2: Racha de 7 días
+  if (student.racha_actual >= 7) {
+    const exists = db.prepare('SELECT COUNT(*) as count FROM Estudiante_Recompensa WHERE id_estudiante = ? AND id_recompensa = ?').get(studentId, 2).count;
+    if (exists === 0) {
+      db.prepare('INSERT INTO Estudiante_Recompensa (id_estudiante, id_recompensa, fecha_obtenida) VALUES (?, ?, ?)').run(studentId, 2, new Date().toISOString());
+    }
+  }
+
+  // Achievement 3: Nivel 5 alcanzado
+  if (student.nivel_actual >= 5) {
+    const exists = db.prepare('SELECT COUNT(*) as count FROM Estudiante_Recompensa WHERE id_estudiante = ? AND id_recompensa = ?').get(studentId, 3).count;
+    if (exists === 0) {
+      db.prepare('INSERT INTO Estudiante_Recompensa (id_estudiante, id_recompensa, fecha_obtenida) VALUES (?, ?, ?)').run(studentId, 3, new Date().toISOString());
+    }
+  }
+
+  // Achievement 4: 100 ejercicios correctos
+  if (correctCount >= 100) {
+    const exists = db.prepare('SELECT COUNT(*) as count FROM Estudiante_Recompensa WHERE id_estudiante = ? AND id_recompensa = ?').get(studentId, 4).count;
+    if (exists === 0) {
+      db.prepare('INSERT INTO Estudiante_Recompensa (id_estudiante, id_recompensa, fecha_obtenida) VALUES (?, ?, ?)').run(studentId, 4, new Date().toISOString());
+    }
+  }
+}
+
 function updateProgress(data) {
   const db = getDB();
 
@@ -259,6 +299,9 @@ function updateProgress(data) {
           const remainingPoints = studentAfter.puntos_totales - 100;
           db.prepare('UPDATE Estudiante SET nivel_actual = ?, puntos_totales = ? WHERE id_estudiante = ?').run(newLevel, remainingPoints, data.id_estudiante);
         }
+  
+        // Award achievements
+        awardAchievements(data.id_estudiante);
       }
     }
   }
@@ -661,4 +704,45 @@ function checkAndUpdateLives(studentId) {
   return false; // Not updated
 }
 
-module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, getCoursesInProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle, checkAndUpdateLives };
+function getStudentStats(studentId) {
+  const db = getDB();
+  const student = db.prepare('SELECT puntos_totales, nivel_actual, racha_actual FROM Estudiante WHERE id_estudiante = ?').get(studentId);
+
+  // Completed exercises
+  const completedExercises = db.prepare('SELECT COUNT(*) as count FROM Progreso WHERE id_estudiante = ? AND estado = ?').get(studentId, 'completado').count;
+
+  // Total exercises
+  const totalExercises = db.prepare('SELECT COUNT(*) as count FROM Ejercicio').get().count;
+
+  // Correct exercises
+  const correctExercises = db.prepare('SELECT COUNT(*) as count FROM Progreso WHERE id_estudiante = ? AND completado_correctamente = 1').get(studentId).count;
+
+  // Incorrect exercises
+  const incorrectExercises = db.prepare('SELECT COUNT(*) as count FROM Progreso WHERE id_estudiante = ? AND completado_correctamente = 0').get(studentId).count;
+
+  return {
+    completedExercises,
+    totalExercises,
+    correctExercises,
+    incorrectExercises,
+    currentLevel: student.nivel_actual,
+    maxLevel: 10, // Assuming
+    streakDays: student.racha_actual,
+    points: student.puntos_totales
+  };
+}
+
+function getStudentAchievements(studentId) {
+  const db = getDB();
+  const achievements = db.prepare(`
+    SELECT r.id_recompensa as id, r.nombre as name, r.descripcion as description, r.icono as icon
+    FROM Estudiante_Recompensa er
+    JOIN Recompensa r ON er.id_recompensa = r.id_recompensa
+    WHERE er.id_estudiante = ?
+    ORDER BY er.fecha_obtenida
+  `).all(studentId);
+
+  return achievements;
+}
+
+module.exports = { getDB, initSchema, seedData, getStudents, getStudent, getCourses, getModules, getLessons, getExercises, getProgress, getCoursesInProgress, addStudent, updateProgress, createChat, getChatsForStudent, deleteChat, addMessage, getMessagesForChat, updateChatTitle, checkAndUpdateLives, getStudentStats, getStudentAchievements };

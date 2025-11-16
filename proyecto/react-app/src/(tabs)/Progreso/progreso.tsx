@@ -13,46 +13,87 @@ interface CourseInProgress {
   progressPercentage: number;
 }
 
+interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+interface Stats {
+  completedExercises: number;
+  totalExercises: number;
+  correctExercises: number;
+  incorrectExercises: number;
+  currentLevel: number;
+  maxLevel: number;
+  streakDays: number;
+  achievements: Achievement[];
+}
+
 function Progreso() {
-    // Mock data - replace with actual data fetching
-    const [stats, setStats] = useState({
-        completedExercises: 45,
-        totalExercises: 100,
-        correctExercises: 38,
-        incorrectExercises: 7,
-        currentLevel: 5,
+    const [stats, setStats] = useState<Stats>({
+        completedExercises: 0,
+        totalExercises: 0,
+        correctExercises: 0,
+        incorrectExercises: 0,
+        currentLevel: 1,
         maxLevel: 10,
-        streakDays: 12,
-        achievements: [
-            { id: 1, name: 'Primer ejercicio completado', icon: '🏆' },
-            { id: 2, name: 'Racha de 7 días', icon: '🔥' },
-            { id: 3, name: 'Nivel 5 alcanzado', icon: '⭐' },
-            { id: 4, name: '100 ejercicios correctos', icon: '🎯' }
-        ]
+        streakDays: 0,
+        achievements: []
     });
 
+    useEffect(() => {
+        async function fetchStats() {
+            try {
+                if (window.edunow?.db) {
+                    const studentStats = await window.edunow.db.getStudentStats(1); // Assuming student ID 1
+                    const achievements = await window.edunow.db.getStudentAchievements(1);
+                    setStats({
+                        ...studentStats,
+                        achievements
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        fetchStats();
+    }, []);
+
     const exerciseData = [
-        { name: 'Completados', value: stats.completedExercises },
-        { name: 'Pendientes', value: stats.totalExercises - stats.completedExercises }
+        { name: 'Completados', value: stats.correctExercises },
+        { name: 'Pendientes', value: stats.totalExercises - stats.correctExercises }
     ];
 
     const correctData = [
         { name: 'Correctos', value: stats.correctExercises },
-        { name: 'Incorrectos', value: stats.incorrectExercises }
+        { name: 'No Correctos', value: stats.totalExercises - stats.correctExercises }
     ];
 
+    const levelPercentage = (stats.currentLevel / stats.maxLevel) * 100;
     const levelData = [
-        { name: 'Nivel', value: (stats.currentLevel / stats.maxLevel) * 100 }
+        { name: 'Completado', value: stats.currentLevel },
+        { name: 'Restante', value: stats.maxLevel - stats.currentLevel }
     ];
+
+    const getLevelColor = (percentage: number) => {
+        if (percentage >= 80) return '#00C49F'; // Green
+        if (percentage >= 50) return '#a476ffff'; // Yellow
+        return '#a476ffff'; // Red
+    };
+
+    const levelColors = [getLevelColor(levelPercentage), '#E0E0E0'];
 
     const streakData = [
-        { day: 'Lun', streak: 1 },
-        { day: 'Mar', streak: 2 },
-        { day: 'Mié', streak: 3 },
-        { day: 'Jue', streak: 4 },
-        { day: 'Vie', streak: 5 },
-        { day: 'Sáb', streak: 6 },
-        { day: 'Dom', streak: 7 }
+        { day: 'Lun', streak: 0 },
+        { day: 'Mar', streak: 0 },
+        { day: 'Mié', streak: 0 },
+        { day: 'Jue', streak: 0 },
+        { day: 'Vie', streak: 1 },
+        { day: 'Sáb', streak: 1 },
+        { day: 'Dom', streak: 1 }
     ];
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
@@ -109,9 +150,23 @@ function Progreso() {
                         <div className="level-text">de {stats.maxLevel}</div>
                     </div>
                     <ResponsiveContainer width="100%" height={200}>
-                        <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="80%" data={levelData}>
-                            <RadialBar dataKey="value" cornerRadius={10} fill="#8884d8" />
-                        </RadialBarChart>
+                        <PieChart>
+                            <Pie
+                                data={levelData}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : '0'}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                            >
+                                {levelData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={levelColors[index % levelColors.length]} />
+                                ))}
+                            </Pie>
+                            <Tooltip />
+                        </PieChart>
                     </ResponsiveContainer>
                 </div>
 

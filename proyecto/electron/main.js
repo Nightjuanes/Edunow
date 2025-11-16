@@ -26,7 +26,9 @@ const {
   addMessage,
   getMessagesForChat,
   updateChatTitle,
-  checkAndUpdateLives
+  checkAndUpdateLives,
+  getStudentStats,
+  getStudentAchievements
 } = require('./db');
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
@@ -83,6 +85,8 @@ app.whenReady().then(() => {
   ipcMain.handle('db:getMessagesForChat', (event, chatId) => getMessagesForChat(chatId));
   ipcMain.handle('db:updateChatTitle', (event, chatId, title) => updateChatTitle(chatId, title));
   ipcMain.handle('db:checkAndUpdateLives', (event, studentId) => checkAndUpdateLives(studentId));
+  ipcMain.handle('db:getStudentStats', (event, studentId) => getStudentStats(studentId));
+  ipcMain.handle('db:getStudentAchievements', (event, studentId) => getStudentAchievements(studentId));
 });
 
 // Cierra correctamente
