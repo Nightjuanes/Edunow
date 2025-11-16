@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import Button from "../components/Button";
 import "./Start.css";
 
 function Start() {
@@ -8,9 +9,14 @@ function Start() {
     <div className="start-container">
       <div className="overlay">
         <h1 className="title">EDUNOW</h1>
-        <button className="play-button" onClick={() => navigate("/home")}>
+        <Button
+          variant="primary"
+          size="large"
+          className="play-button"
+          onClick={() => navigate("/home")}
+        >
           PLAY
-        </button>
+        </Button>
       </div>
     </div>
   );

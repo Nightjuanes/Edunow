@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./contenido.css";
 import Ejercicio from "./ejercicio/Ejercicio";
+import Button from "../../../components/Button";
 
 interface Student {
   id_estudiante: number;
@@ -140,7 +141,9 @@ function ContenidoCursos() {
   return (
     <div className="contenido-container" style={{ position: 'relative' }}>
       <Link to="/cursos">
-        <button className="boton-mis-cursos">Mis cursos</button>
+        <Button variant="secondary" size="medium" className="boton-mis-cursos">
+          Mis cursos
+        </Button>
       </Link>
       <h1 className="titulo-curso">{courseTitle}</h1>
 
@@ -157,7 +160,9 @@ function ContenidoCursos() {
 
       {selectedModule && !selectedExercise && (
         <div>
-          <button onClick={() => setSelectedModule(null)}>Volver a módulos</button>
+          <Button variant="secondary" size="medium" onClick={() => setSelectedModule(null)}>
+            Volver a módulos
+          </Button>
           <h2>{selectedModule.titulo_modulo}</h2>
           <div className="exercises-list">
             {exercises.map((exercise) => (
@@ -171,7 +176,9 @@ function ContenidoCursos() {
 
       {selectedExercise && (
         <div>
-          <button onClick={() => setSelectedExercise(null)}>Volver a ejercicios</button>
+          <Button variant="secondary" size="medium" onClick={() => setSelectedExercise(null)}>
+            Volver a ejercicios
+          </Button>
           <Ejercicio exercise={selectedExercise} studentId={1} onComplete={handleExerciseComplete} />
         </div>
       )}

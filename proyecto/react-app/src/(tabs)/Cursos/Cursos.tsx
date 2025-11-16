@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./cursos.css";
 import { Link } from "react-router-dom";
+import Button from "../../components/Button";
 
 
 interface Course {
@@ -145,7 +146,9 @@ function Cursos() {
         <div className="botones">
           {/* 🔗 Redirección dinámica con el ID */}
           <Link to={`/contenido_curso/${cursoSeleccionado.id}`}>
-            <button className="btn">INICIAR</button>
+            <Button variant="primary" size="large" className="btn">
+              INICIAR
+            </Button>
           </Link>
         </div>
       </div>

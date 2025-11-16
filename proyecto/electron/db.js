@@ -560,7 +560,7 @@ function seedData() {
     const lesson3Result = db.prepare(`
       INSERT INTO Leccion (id_modulo, titulo_leccion, contenido, orden)
       VALUES (?, ?, ?, ?)
-    `).run(module3Id, 'Ejercicios Prácticos', 'Pon a prueba tus conocimientos con crucigramas y preguntas', 1);
+    `).run(module3Id, 'Ejercicios Prácticos', 'Pon a prueba tus conocimientos con ejercicios de orden correcto y preguntas', 1);
 
     const lesson3Id = lesson3Result.lastInsertRowid;
 
@@ -646,13 +646,13 @@ function seedData() {
           UPDATE Ejercicio
           SET pregunta = ?, tipo = ?, respuesta_correcta = ?, puntos = ?
           WHERE id_ejercicio = ?
-        `).run(JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, existingCircuitExercise.id_ejercicio);
+        `).run(JSON.stringify(circuitData), 'orden correcto', JSON.stringify(correctAnswers), 30, existingCircuitExercise.id_ejercicio);
       } else {
         // Insert new exercise
         db.prepare(`
           INSERT INTO Ejercicio (id_leccion, pregunta, tipo, respuesta_correcta, puntos, orden)
           VALUES (?, ?, ?, ?, ?, ?)
-        `).run(lesson.id_leccion, JSON.stringify(circuitData), 'crucigrama', JSON.stringify(correctAnswers), 30, 1);
+        `).run(lesson.id_leccion, JSON.stringify(circuitData), 'orden correcto', JSON.stringify(correctAnswers), 30, 1);
       }
     }
   }

@@ -2,6 +2,8 @@ import { Link, Outlet } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./Layout.css";
 import logo from "../edunowlogo.png";
+import BackgroundMusic from "../BackgroundMusic";
+import MusicControls from "../MusicControls";
 
 
 interface Student {
@@ -65,6 +67,7 @@ export default function Layout() {
 
   return (
     <div className="layout">
+      <BackgroundMusic />
       <aside className="sidebar">
         
         <div className="logo-container">
@@ -90,6 +93,7 @@ export default function Layout() {
             <span>🚀 Nivel: {student ? student.nivel_actual : 1}</span>
             <span> Vidas: {student ? renderHearts(student.vidas) : '❤️❤️❤️'}</span>
           </div>
+          <MusicControls />
         </header>
         <section className="content">
           <Outlet /> {/* Aquí se renderizan las páginas */}

@@ -87,13 +87,13 @@ function Progreso() {
     const levelColors = [getLevelColor(levelPercentage), '#E0E0E0'];
 
     const streakData = [
-        { day: 'Lun', streak: 0 },
-        { day: 'Mar', streak: 0 },
+        { day: 'Lun', streak: 1 },
+        { day: 'Mar', streak: 1 },
         { day: 'Mié', streak: 0 },
         { day: 'Jue', streak: 0 },
-        { day: 'Vie', streak: 1 },
-        { day: 'Sáb', streak: 1 },
-        { day: 'Dom', streak: 1 }
+        { day: 'Vie', streak: 0 },
+        { day: 'Sáb', streak: 0 },
+        { day: 'Dom', streak: 0 }
     ];
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];

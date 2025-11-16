@@ -6,27 +6,29 @@ import Cursos from "./(tabs)/Cursos/Cursos";
 import Progreso from "./(tabs)/Progreso/progreso";
 import Start from "./Start/Start";
 import ContenidoCurso from "./(tabs)/Cursos/contenido/ContenidoCursos";
+import { AudioProvider } from "./hooks/AudioContext";
 
 
- 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/start" replace />} />
-        {/* Pantalla de inicio fuera del layout */}
-        <Route path="/start" element={<Start />} />
+    <AudioProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/start" replace />} />
+          {/* Pantalla de inicio fuera del layout */}
+          <Route path="/start" element={<Start />} />
 
-        {/* Todo lo que va dentro del layout */}
-        <Route element={<Layout />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/profe-now" element={<ProfeNow />} />
-          <Route path="/cursos" element={<Cursos />} />
-          <Route path="/progreso" element={<Progreso />} />
-          <Route path="/contenido_curso/:id" element={<ContenidoCurso />} />
-        </Route>
-      </Routes>
-    </Router>
+          {/* Todo lo que va dentro del layout */}
+          <Route element={<Layout />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/profe-now" element={<ProfeNow />} />
+            <Route path="/cursos" element={<Cursos />} />
+            <Route path="/progreso" element={<Progreso />} />
+            <Route path="/contenido_curso/:id" element={<ContenidoCurso />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AudioProvider>
   );
 }
 

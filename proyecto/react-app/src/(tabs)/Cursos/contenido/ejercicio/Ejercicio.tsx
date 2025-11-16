@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Button from '../../../../components/Button';
+import { useAudio } from '../../../../hooks/useAudio';
 import './ejercicio.css';
 
 interface Exercise {
@@ -28,6 +30,7 @@ interface EjercicioProps {
 }
 
 const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }) => {
+  const { playSuccess, playError } = useAudio();
   const [matches, setMatches] = useState<{ [key: string]: string }>({});
   const [selectedTerm, setSelectedTerm] = useState<string | null>(null);
   const [selectedDef, setSelectedDef] = useState<string | null>(null);
@@ -82,6 +85,17 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
     setScore(calculatedScore);
     setIsSubmitted(true);
 
+    // Play success or error sound based on performance
+    const isPerfect = correctCount === terms.length;
+    const isGood = correctCount >= terms.length * 0.7; // 70% correct
+    if (isPerfect) {
+      playSuccess();
+    } else if (isGood) {
+      // Could add a different sound for partial success
+    } else {
+      playError();
+    }
+
     // Save progress to backend
     try {
       await (window as any).edunow.db.updateProgress({
@@ -109,6 +123,17 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
     const calculatedScore = Math.round((foundCount / words.length) * exercise.puntos);
     setScore(calculatedScore);
     setIsSubmitted(true);
+
+    // Play success or error sound based on performance
+    const isPerfect = foundCount === words.length;
+    const isGood = foundCount >= words.length * 0.7; // 70% found
+    if (isPerfect) {
+      playSuccess();
+    } else if (isGood) {
+      // Could add a different sound for partial success
+    } else {
+      playError();
+    }
 
     // Save progress to backend
     try {
@@ -330,9 +355,15 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         </div>
 
         {!isSubmitted && (
-          <button className="submit-btn" onClick={handleSubmit} disabled={Object.keys(matches).length !== terms.length}>
+          <Button
+            variant="primary"
+            size="medium"
+            className="submit-btn"
+            onClick={handleSubmit}
+            disabled={Object.keys(matches).length !== terms.length}
+          >
             Enviar Respuestas
-          </button>
+          </Button>
         )}
 
         {isSubmitted && (
@@ -399,9 +430,14 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         </div>
 
         {!isSubmitted && (
-          <button className="submit-btn" onClick={handleSubmitWordSearch}>
+          <Button
+            variant="primary"
+            size="medium"
+            className="submit-btn"
+            onClick={handleSubmitWordSearch}
+          >
             Enviar Respuestas
-          </button>
+          </Button>
         )}
 
         {isSubmitted && (
@@ -418,7 +454,7 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         )}
       </div>
     );
-  } else if (exercise.tipo === 'crucigrama') {
+  } else if (exercise.tipo === 'orden correcto') {
     // Circuit Diagram Completion Exercise with Drag & Drop
     const circuitData = JSON.parse(exercise.pregunta);
     const correctAnswers = JSON.parse(exercise.respuesta_correcta);
@@ -470,6 +506,28 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
       const calculatedScore = Math.round((correctCount / correctAnswers.length) * exercise.puntos);
       setScore(calculatedScore);
       setIsSubmitted(true);
+
+      // Play success or error sound based on performance
+      const isPerfectCircuit = correctCount === correctAnswers.length;
+      const isGoodCircuit = correctCount >= correctAnswers.length * 0.7; // 70% correct
+      if (isPerfectCircuit) {
+        playSuccess();
+      } else if (isGoodCircuit) {
+        // Could add a different sound for partial success
+      } else {
+        playError();
+      }
+
+      // Play success or error sound based on performance
+      const isPerfectMC = correctCount === correctAnswers.length;
+      const isGoodMC = correctCount >= correctAnswers.length * 0.7; // 70% correct
+      if (isPerfectMC) {
+        playSuccess();
+      } else if (isGoodMC) {
+        // Could add a different sound for partial success
+      } else {
+        playError();
+      }
 
       try {
         await (window as any).edunow.db.updateProgress({
@@ -561,9 +619,14 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         </div>
 
         {!isSubmitted && (
-          <button className="submit-btn" onClick={handleSubmitCircuit}>
+          <Button
+            variant="primary"
+            size="medium"
+            className="submit-btn"
+            onClick={handleSubmitCircuit}
+          >
             Enviar Respuestas
-          </button>
+          </Button>
         )}
 
         {isSubmitted && (
@@ -643,9 +706,14 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         </div>
 
         {!isSubmitted && (
-          <button className="submit-btn" onClick={handleSubmitMultipleChoice}>
+          <Button
+            variant="primary"
+            size="medium"
+            className="submit-btn"
+            onClick={handleSubmitMultipleChoice}
+          >
             Enviar Respuestas
-          </button>
+          </Button>
         )}
 
         {isSubmitted && (
