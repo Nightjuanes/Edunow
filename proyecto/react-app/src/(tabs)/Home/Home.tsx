@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./home.css";
 
 interface CourseInProgress {
@@ -14,6 +15,7 @@ interface CourseInProgress {
 
 function Home() {
   const [coursesInProgress, setCoursesInProgress] = useState<CourseInProgress[]>([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchCoursesInProgress() {
@@ -40,8 +42,8 @@ function Home() {
           <h2>Mis Cursos en Progreso</h2>
           <div className="courses-grid">
             {coursesInProgress.map((course) => (
-              <div key={course.id_curso} className="course-card">
-                <img src={course.imagen_curso} alt={course.titulo} className="course-image" />
+              <div key={course.id_curso} className="course-card" onClick={() => navigate(`/contenido_curso/${course.id_curso}`)}>
+                <img src={course.banner} alt={course.titulo} className="course-image" />
                 <div className="course-info">
                   <h3 className="course-title">{course.titulo}</h3>
                   <p className="course-description">{course.descripcion}</p>
