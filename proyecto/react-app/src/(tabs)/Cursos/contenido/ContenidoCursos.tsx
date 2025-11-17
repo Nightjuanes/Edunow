@@ -27,6 +27,7 @@ function ContenidoCursos() {
   const [courseTitle, setCourseTitle] = useState("");
   const [student, setStudent] = useState<Student | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [exerciseProgress, setExerciseProgress] = useState<{[key: number]: any}>({});
 
   const isEnergyCourse = courseTitle.toLowerCase().includes('energ');
   const progressIcons = isEnergyCourse ? ['☀️'] : ['📘',  '📗', '📙'];
@@ -91,6 +92,14 @@ function ContenidoCursos() {
         allExercises.push(...exs);
       }
       setExercises(allExercises);
+
+      // Fetch progress for these exercises
+      const progress = await (window as any).edunow.db.getProgress(1); // Assuming student ID 1
+      const progressMap: {[key: number]: any} = {};
+      progress.forEach((p: any) => {
+        progressMap[p.id_ejercicio] = p;
+      });
+      setExerciseProgress(progressMap);
     } catch (error) {
       console.error("Error fetching lessons and exercises:", error);
     }
@@ -102,6 +111,14 @@ function ContenidoCursos() {
     try {
       const exs = await (window as any).edunow.db.getExercises(lesson.id_leccion);
       setExercises(exs);
+
+      // Fetch progress for these exercises
+      const progress = await (window as any).edunow.db.getProgress(1); // Assuming student ID 1
+      const progressMap: {[key: number]: any} = {};
+      progress.forEach((p: any) => {
+        progressMap[p.id_ejercicio] = p;
+      });
+      setExerciseProgress(progressMap);
     } catch (error) {
       console.error("Error fetching exercises:", error);
     }
@@ -165,11 +182,21 @@ function ContenidoCursos() {
           </Button>
           <h2>{selectedModule.titulo_modulo}</h2>
           <div className="exercises-list">
-            {exercises.map((exercise) => (
-              <div key={exercise.id_ejercicio} className="exercise-item" onClick={() => handleExerciseClick(exercise)}>
-                <p>{exercise.tipo === 'pseudocodigo' ? '💻 ' : ''}Ejercicio de {exercise.tipo}</p>
-              </div>
-            ))}
+            {exercises.map((exercise) => {
+              const progress = exerciseProgress[exercise.id_ejercicio];
+              const isPerfectlyCompleted = progress && progress.completado_correctamente === 1;
+              return (
+                <div
+                  key={exercise.id_ejercicio}
+                  className={`exercise-item ${isPerfectlyCompleted ? 'completed-perfectly' : ''}`}
+                  onClick={() => handleExerciseClick(exercise)}
+                >
+                  {isPerfectlyCompleted && <div className="completion-indicator">🟢</div>}
+                  <p>{exercise.tipo === 'pseudocodigo' ? '💻 ' : ''}Ejercicio de {exercise.tipo}</p>
+                  {isPerfectlyCompleted && <p className="completed-text">Completado perfectamente</p>}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

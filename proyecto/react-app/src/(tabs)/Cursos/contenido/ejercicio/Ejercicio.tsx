@@ -39,6 +39,7 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
   const containerRef = useRef<HTMLDivElement>(null);
   const [student, setStudent] = useState<Student | null>(null);
   const [lines, setLines] = useState<{x1: number, y1: number, x2: number, y2: number, correct: boolean}[]>([]);
+  const [isAlreadyCompletedPerfectly, setIsAlreadyCompletedPerfectly] = useState(false);
 
   // Word search states
   const [grid, setGrid] = useState<string[][]>([]);
@@ -308,8 +309,41 @@ const Ejercicio: React.FC<EjercicioProps> = ({ exercise, studentId, onComplete }
         console.error('Error fetching student:', error);
       }
     };
+
+    const checkExerciseCompletion = async () => {
+      try {
+        if (window.edunow?.db) {
+          const progress = await window.edunow.db.getProgress(studentId);
+          const exerciseProgress = progress.find((p: any) => p.id_ejercicio === exercise.id_ejercicio);
+          if (exerciseProgress && exerciseProgress.completado_correctamente === 1) {
+            setIsAlreadyCompletedPerfectly(true);
+            setIsSubmitted(true);
+            setScore(exerciseProgress.puntaje_obtenido);
+            // Load the matches/answers if needed for display
+            // For now, we'll show the results
+          }
+        }
+      } catch (error) {
+        console.error('Error checking exercise completion:', error);
+      }
+    };
+
     fetchStudent();
-  }, [studentId]);
+    checkExerciseCompletion();
+  }, [studentId, exercise.id_ejercicio]);
+
+  if (isAlreadyCompletedPerfectly) {
+    return (
+      <div className="ejercicio-container">
+        <h2>Ejercicio Completado Perfectamente</h2>
+        <p>Ya has completado este ejercicio con una puntuación perfecta. Aquí está tu retroalimentación:</p>
+        <div className="result">
+          <p>Puntuación: {score} / {exercise.puntos}</p>
+          <p>¡Felicitaciones! Completaste este ejercicio al 100%.</p>
+        </div>
+      </div>
+    );
+  }
 
   let content;
 
