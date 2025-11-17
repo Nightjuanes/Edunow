@@ -149,7 +149,7 @@ function Progreso() {
                         <div className="level-number">{stats.currentLevel}</div>
                         <div className="level-text">de {stats.maxLevel}</div>
                     </div>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                             <Pie
                                 data={levelData}

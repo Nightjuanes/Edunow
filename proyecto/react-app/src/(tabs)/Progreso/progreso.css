@@ -21,7 +21,7 @@
 .chart-card {
     background: white;
     border-radius: 10px;
-    padding: 20px;
+    padding: 50px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
 }
@@ -45,7 +45,7 @@
 .level-number {
     font-size: 3rem;
     font-weight: bold;
-    color: #007bff;
+    color: #8884d8;
 }
 
 .level-text {
